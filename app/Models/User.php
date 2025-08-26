@@ -48,4 +48,20 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function ustadz()
+    {
+        return $this->hasOne(Ustadz::class, 'user_id', 'id');
+    }
+
+    public function siswa()
+    {
+        return $this->hasOne(Siswa::class, 'user_id', 'id');
+    }
+
+  /*   public function kelasnyas()
+    {
+        return $this->hasManyThrough(Kelasnya::class, Ustadz::class, 'user_id', 'ustadz_id', 'id', 'id');
+    } */
+    
 }

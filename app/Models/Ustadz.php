@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Ustadz extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    protected $fillable = ['user_id', 'kelas_id', 'nama_ustadz', 'kelamin', 'tempat_lahir', 'tgl_lahir', 'no_hp'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function kelasnya()
+    {
+        return $this->belongsTo(Kelasnya::class, 'kelas_id');
+    }
+}
