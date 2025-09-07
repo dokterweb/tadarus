@@ -1,0 +1,87 @@
+@extends('layouts.app')
+@section('content_title','Kelas')
+
+@section('content')
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card card-primary">
+                <div class="card-header">
+                <h3 class="card-title">Tambah Data</h3>
+                </div>
+                <form method="POST" action="{{route('kelasnyas.update',$kelasnya->id)}}">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label >Nama Kelas</label>
+                            <input type="text" name="nama_kelas" class="form-control" value="{{$kelasnya->nama_kelas}}">
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card card-success">
+                <div class="card-header">
+                <h3 class="card-title">List Kelas</h3>
+                </div>
+                <div class="card-body">
+                    <table id="paketTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama Kelas</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @forelse ($kelasview as $p)
+                            <tr>
+                                <td>{{$loop->iteration}}</td>
+                                <td>{{$p->nama_kelas}} </td>
+                                <td class="d-flex align-items-center" style="gap: 5px;">
+                                    <a href="{{route('kelasnyas.edit',$p->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                </td>
+                            </tr>
+                        @empty
+                        <tr>
+                            <td colspan="3">No Data</td>
+                        </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <!-- SweetAlert2 Script -->
+     @if (session('success'))
+     <script>
+         Swal.fire({
+             icon: 'success',
+             title: 'Berhasil',
+             text: "{{ session('success') }}",
+             position: 'top-end',
+             showConfirmButton: false,
+             timer: 1500
+         });
+     </script>
+    @elseif (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "{{ session('error') }}",
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        </script>
+    @endif
+@endsection

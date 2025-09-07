@@ -22,7 +22,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <link rel="stylesheet" href="{{asset('adminlte')}}/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
   <!-- SweetAlert2 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+  @yield('css')
   @vite('resources/js/app.js')
 </head>
 <body class="hold-transition sidebar-mini">
@@ -101,6 +101,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
 <!-- jQuery -->
 {{-- <script src="{{asset('adminlte')}}/plugins/jquery/jquery.min.js"></script> --}}
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+{{-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> --}}
 <!-- Bootstrap 4 -->
 <script src="{{asset('adminlte')}}/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->

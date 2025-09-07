@@ -62,6 +62,11 @@
                                 <td>{{ $history->nilai }}</td>
                                 <td>{{ $history->keterangan }}</td>
                                 <td>
+                                    <!-- Ubah tombol Edit menjadi link -->
+                                    <a href="{{ route('sabqis.history.edit', ['id' => $history->id]) }}" class="btn btn-warning btn-edit">
+                                        Edit
+                                    </a>
+
                                     <button type="button" class="btn btn-danger delete-button" data-id="{{ $history->id }}"
                                         data-url="{{ route('sabqi-history.destroy', ['siswa_id' => $siswa_id, 'id' => $history->id]) }}">Hapus
                                     </button>

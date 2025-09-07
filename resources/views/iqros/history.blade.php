@@ -37,6 +37,7 @@
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Tgl Iqro</th>
                             <th>Iqro Jilid</th>
                             <th>Halaman</th>
                             <th>Nilai</th>
@@ -48,6 +49,7 @@
                         @foreach ($iqroHistories as $index => $history)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
+                                <td>{{ \Carbon\Carbon::parse($history->tgl_iqro)->format('d M Y') }}</td>
                                 <td>{{ $history->iqro_jilid }}</td>
                                 <td>{{ $history->halaman }}</td>
                                 <td>{{ $history->nilai }}</td>
@@ -59,6 +61,10 @@
                                         data-toggle="modal" 
                                         data-target="#editIqroModal">Edit
                                     </button>
+                                    <button type="button" class="btn btn-danger delete-button" data-id="{{ $history->id }}"
+                                        data-url="{{ route('iqro-history.destroy', ['id' => $history->id]) }}">
+                                            Hapus
+                                        </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -118,7 +124,7 @@
         </div>
     </div>
 </div>
-{{-- 
+
 <div class="modal fade" id="editIqroModal" tabindex="-1" role="dialog" aria-labelledby="editIqroModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -132,7 +138,10 @@
                 @csrf
                 @method('PUT') <!-- Menggunakan metode PUT untuk update -->
                 <div class="modal-body">
-                    <!-- Form fields for editing -->
+                    <div class="form-group">
+                        <label for="tgl_iqro">Tanggal Iqro</label>
+                        <input type="date" name="tgl_iqro" id="tgl_iqro" class="form-control" required>
+                    </div>
                     <div class="form-group">
                         <label for="iqro_jilid">Iqro Jilid</label>
                         <select name="iqro_jilid" id="iqro_jilid" class="form-control" required>
@@ -153,10 +162,6 @@
                         <label for="keterangan">Keterangan</label>
                         <textarea name="keterangan" id="keterangan" class="form-control"></textarea>
                     </div>
-                    <div class="form-group">
-                        <label for="tgl_iqro">Tanggal Iqro</label>
-                        <input type="date" name="tgl_iqro" id="tgl_iqro" class="form-control" required>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
@@ -166,7 +171,7 @@
         </div>
     </div>
 </div>
- --}}
+ 
 @endsection
 
 
@@ -193,23 +198,48 @@
 
 
 
-    function deleteConfirmation(id) {
+    $(document).on('click', '.delete-button', function() {
+        var url = $(this).data('url');  // URL untuk edit
+        
+        // Tampilkan SweetAlert2 untuk konfirmasi hapus
         Swal.fire({
-            title: 'Apakah Anda yakin?',
-            text: "Data ini akan dihapus dan tidak dapat dipulihkan!",
+            title: 'Yakin ingin menghapus?',
+            text: "Data ini akan dihapus permanen!",
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Hapus!',
-            cancelButtonText: 'Batal'
+            confirmButtonText: 'Hapus',
+            cancelButtonText: 'Batal',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                // Jika tombol "Ya, Hapus!" ditekan, kirim form untuk menghapus data
-                document.getElementById('delete-form-' + id).submit();
+                // Jika pengguna mengkonfirmasi hapus, kirim permintaan DELETE
+                $.ajax({
+                    url: url, // Ambil URL dari data-url
+                    type: 'DELETE',  // Pastikan menggunakan metode DELETE
+                    data: {
+                        _token: '{{ csrf_token() }}'  // Kirim CSRF token untuk permintaan DELETE
+                    },
+                    success: function(response) {
+                        // Jika berhasil, tampilkan pesan sukses dan hapus baris di tabel
+                        Swal.fire(
+                            'Dihapus!',
+                            'Data berhasil dihapus.',
+                            'success'
+                        ).then(function() {
+                            location.reload(); // Reload halaman untuk memperbarui tampilan
+                        });
+                    },
+                    error: function() {
+                        Swal.fire(
+                            'Gagal!',
+                            'Terjadi kesalahan saat menghapus data.',
+                            'error'
+                        );
+                    }
+                });
             }
         });
-    }
+    });
     </script>
 
     @if (session('success'))

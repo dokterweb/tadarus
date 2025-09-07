@@ -50,11 +50,20 @@
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ \Carbon\Carbon::parse($history->tgl_manzil)->format('d F Y') }}</td>
-                                <td>{{ $history->surat_id }}</td>
+                                <td>
+                                    @if ($history->surat)
+                                        {{ $history->surat->sura_name }}
+                                    @else
+                                        Surat Tidak Ditemukan
+                                    @endif
+                                </td>
                                 <td>{{ $history->dariayat }} - {{ $history->sampaiayat }}</td>
                                 <td>{{ $history->nilai }}</td>
                                 <td>{{ $history->keterangan }}</td>
                                 <td>
+                                    <a href="{{ route('manzils.history.edit', ['id' => $history->id]) }}" class="btn btn-warning btn-edit">
+                                        Edit
+                                    </a>
                                     <button type="button" class="btn btn-danger delete-button" data-id="{{ $history->id }}"
                                     data-url="{{ route('manzil-history.destroy', ['siswa_id' => $siswa_id, 'id' => $history->id]) }}">
                                         Hapus
@@ -172,7 +181,7 @@
             if (sura_no) {
                 // Mengirim request AJAX untuk mengambil data surat
                 $.ajax({
-                    url: '/get-surat-details/' + sura_no, // URL untuk AJAX
+                    url: '/get-surat-manzil/' + sura_no, // URL untuk AJAX
                     type: 'GET',
                     dataType: 'json',
                     success: function(data) {
