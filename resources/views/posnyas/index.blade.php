@@ -40,7 +40,7 @@
                                 <th>#</th>
                                 <th>Nama POS</th>
                                 <th>Keterangan</th>
-                                {{-- <th>Action</th> --}}
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -50,15 +50,14 @@
                                 <td>{{$p->pos_name}} </td>
                                 <td>{{$p->keterangan}} </td>
                                 <td class="d-flex align-items-center" style="gap: 5px;">
-                                   {{--  <a href="{{route('posnyas.edit',$p->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
-                                    <form method="POST" action="{{ route('posnyas.destroy', $p->id) }}" style="display: inline;" id="delete-form-{{ $p->id }}">
+                                   <a href="{{route('posnyas.edit',$p->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                   <form action="{{ route('posnyas.destroy', $p->id) }}" method="POST" id="delete-form-{{ $p->id }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $p->id }})">
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $p->id }})">
                                             <i class="fas fa-trash-alt"></i> Hapus
                                         </button>
-                                    </form> --}}
-                                    
+                                    </form>
                                 </td>
                             </tr>
                         @empty
@@ -75,7 +74,7 @@
 
 @endsection
 
-@section('script')
+@section('scripts')
     @if (session('success'))
     <script>
         Swal.fire({
@@ -99,4 +98,22 @@
         });
     </script>
     @endif
+    <script>
+        function confirmDelete(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan dihapus secara permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Jika pengguna mengonfirmasi, submit form untuk menghapus data
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+    </script>
 @endsection

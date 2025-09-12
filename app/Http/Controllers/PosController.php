@@ -38,9 +38,38 @@ class PosController extends Controller
         }
     }
 
-    public function edit(Posnya $postnya)
+    public function edit(Posnya $posnya)
     {
+        // dd($posnya);
         $posnyas = Posnya::all();
-        return view('posnyas.index',compact('posnyas','postnya'));
+        return view('posnyas.edit',compact('posnyas','posnya'));
     }
+
+    public function update(Request $request, Posnya $posnya)
+    {
+        // Validasi data input
+        $request->validate([
+            'pos_name' => 'required|string|max:255',
+            'keterangan' => 'required|string|max:255'
+        ]);
+
+        // Update data periode yang ditemukan berdasarkan ID
+        $posnya->update([
+            'pos_name'      => $request->pos_name,
+            'keterangan'    => $request->keterangan,
+        ]);
+
+        // Redirect ke halaman daftar periode dengan pesan sukses
+        return redirect()->route('posnyas')->with('success', 'POS berhasil diperbarui!');
+    }
+
+    public function destroy(Posnya $posnya)
+    {
+        // Menghapus data periode
+        $posnya->delete();
+
+        // Redirect ke halaman daftar periode dengan pesan sukses
+        return redirect()->route('posnyas')->with('success', 'POS berhasil dihapus!');
+    }
+
 }

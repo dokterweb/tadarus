@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('sabqi_histories', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('sabqi_id');
-            $table->foreign('sabqi_id')->references('id')->onDelete('cascade');
-            $table->Integer('surat_id');
-            $table->Integer('surat_no');
-            $table->Integer('dariayat');
-            $table->Integer('sampaiayat');
+            $table->foreign('sabqi_id')->references('id')->on('sabqis')->onDelete('cascade');
+            $table->unsignedInteger('surat_id');
+            $table->unsignedInteger('surat_no');
+            $table->unsignedInteger('dariayat');
+            $table->unsignedInteger('sampaiayat');
             $table->date('tgl_sabqi');
-            $table->Integer('nilai');
-            $table->string('keterangan');
+            $table->unsignedInteger('nilai');
+            $table->text('keterangan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

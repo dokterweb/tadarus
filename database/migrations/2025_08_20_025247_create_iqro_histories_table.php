@@ -15,11 +15,11 @@ return new class extends Migration
             $table->increments('id');
             $table->date('tgl_iqro');
             $table->unsignedInteger('iqro_id');
-            $table->foreign('iqro_id')->references('id')->onDelete('cascade');
+            $table->foreign('iqro_id')->references('id')->on('iqros')->onDelete('cascade');
             $table->string('iqro_jilid');
-            $table->Integer('halaman');
-            $table->Integer('nilai');
-            $table->string('keterangan');
+            $table->unsignedInteger('halaman');
+            $table->unsignedInteger('nilai');
+            $table->string('keterangan')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

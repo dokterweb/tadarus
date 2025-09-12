@@ -29,6 +29,12 @@
             </a>
           </li>
           <li class="nav-item">
+            <a href="{{route('payouts.index')}}" class="nav-link {{request()->routeIs('payouts.index')?'active':''}}">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>Pembayaran</p>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>Master<i class="right fas fa-angle-left"></i></p>
@@ -156,6 +162,12 @@
                   <p>POS</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{route('payments')}}" class="nav-link {{request()->routeIs('payments')?'active':''}}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Jenis Bayar</p>
+                </a>
+              </li>
             </ul>
           </li> 
 
@@ -193,6 +205,12 @@
             <a href="{{route('iqros.iqrosiswa')}}" class="nav-link {{request()->routeIs('iqros.iqrosiswa')?'active':''}}">
               <i class="nav-icon fas fa-th"></i>
               <p>Iqro</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="{{route('payoutsiswas.index')}}" class="nav-link {{request()->routeIs('payoutsiswas.index')?'active':''}}">
+              <i class="nav-icon fas fa-th"></i>
+              <p>Pembayaran</p>
             </a>
           </li>
         </ul>

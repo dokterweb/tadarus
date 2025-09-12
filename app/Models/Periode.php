@@ -13,4 +13,10 @@ class Periode extends Model
     protected $table = 'periodes'; // pastikan ini sesuai dengan nama tabel di database
     protected $primaryKey = 'id';
     protected $fillable=['periode_start','periode_end','periode_status'];
+
+    // Relasi One-to-Many dengan Payments
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'periode_id');
+    }
 }

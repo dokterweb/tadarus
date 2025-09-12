@@ -130,21 +130,21 @@
         }
     
         function confirmDelete(id) {
-        Swal.fire({
-            title: 'Apakah Anda yakin?',
-            text: "Data ini akan dihapus secara permanen!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Hapus',
-            cancelButtonText: 'Batal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Jika pengguna mengonfirmasi, submit form untuk menghapus data
-                document.getElementById('delete-form-' + id).submit();
-            }
-        });
-    }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan dihapus secara permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Hapus',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Jika pengguna mengonfirmasi, submit form untuk menghapus data
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
         
     </script>
 @stop

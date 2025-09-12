@@ -8,11 +8,14 @@ use App\Http\Controllers\SabaqController;
 use App\Http\Controllers\SabqiController;
 use App\Http\Controllers\SiswaController;
 use App\Http\Controllers\ManzilController;
+use App\Http\Controllers\PayoutController;
 use App\Http\Controllers\UstadzController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PeriodeController;
 use App\Http\Controllers\TelegramController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\PayoutsiswaController;
 use App\Http\Controllers\AbsensiSiswaController;
 
 Route::get('/', function () {
@@ -102,5 +105,39 @@ Route::middleware('auth')->group(function () {
     Route::get('posnyas',[PosController::class, 'index'])->middleware('role:admin')->name('posnyas');
     Route::post('posnyas/store', [PosController::class, 'store'])->middleware('role:admin')->name('posnyas.store');
     Route::get('posnyas/{posnya}/edit', [PosController::class, 'edit'])->middleware('role:admin')->name('posnyas.edit');
+    Route::put('posnyas/{posnya}', [PosController::class, 'update'])->middleware('role:admin')->name('posnyas.update');
+    Route::delete('posnyas/{posnya}', [PosController::class, 'destroy'])->middleware('role:admin')->name('posnyas.destroy');
+
+    Route::get('payments',[PaymentController::class, 'index'])->middleware('role:admin')->name('payments');
+    Route::get('payments/create', [PaymentController::class, 'create'])->middleware('role:admin')->name('payments.create');
+    Route::post('payments/store', [PaymentController::class, 'store'])->middleware('role:admin')->name('payments.store');
+    Route::get('payments/{payment}/edit', [PaymentController::class, 'edit'])->middleware('role:admin')->name('payments.edit');
+    Route::put('payments/{payment}', [PaymentController::class, 'update'])->middleware('role:admin')->name('payments.update');
+    Route::get('payments/view_bulan/{payment}', [PaymentController::class, 'view_bulan'])->middleware('role:admin')->name('payments.view_bulan');
+    Route::get('payments/view_bulan/{payment}/filter', [PaymentController::class, 'filterBulanans'])
+     ->middleware('role:admin')
+     ->name('payments.filter_bulanans');
+     Route::get('payments/add_payment_bulan/{payment}', [PaymentController::class, 'add_payment_bulan'])
+    ->middleware('role:admin')->name('payments.add_payment_bulan');
+    Route::post('payments/store_bulanans/{payment}', [PaymentController::class, 'storeBulanans'])
+    ->middleware('role:admin')->name('payments.storeBulanans');
+
+    Route::get('payouts', [PayoutController::class, 'index'])->middleware('role:admin')->name('payouts.index');
+    Route::get('payouts/filter_bulanans', [PayoutController::class, 'filter_bulanans'])->middleware('role:admin')->name('payouts.filter_bulanans');
+    Route::get('payouts/bayar_bulan/{payment}/{siswa}', [PayoutController::class, 'bayar_bulan'])->middleware('role:admin')->name('payouts.bayar_bulan');
+    Route::put('payouts/updatebulanans', [PayoutController::class, 'updateBulanans'])->name('payouts.updatebulanans');
+
+    Route::get('payoutsiswas', [PayoutsiswaController::class, 'index'])->middleware('role:siswa')->name('payoutsiswas.index');
+    Route::get('payoutsiswas/filter_bulanans', [PayoutsiswaController::class, 'filter_bulanans'])
+    ->middleware('role:siswa')->name('payoutsiswas.filter_bulanans');
+    Route::get('payoutsiswas/tagihan_bulan/{payment}/{siswa}', [PayoutsiswaController::class, 'tagihan_bulan'])
+    ->middleware('role:siswa')->name('payoutsiswas.tagihan_bulan');
+    // untuk mulai bayar
+    Route::put('payoutsiswas/bayarbulanan', [PayoutsiswaController::class, 'bayarbulanan'])
+    ->name('payoutsiswas.bayarbulanan');
+
+    // untuk update status setelah sukses
+    Route::post('payoutsiswas/update-status', [PayoutsiswaController::class, 'updateStatus'])
+    ->name('payoutsiswas.update_status');
 
 });

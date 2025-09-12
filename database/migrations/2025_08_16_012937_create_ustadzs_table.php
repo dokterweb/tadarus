@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->unsignedInteger('kelas_id');
-            $table->foreign('kelas_id')->references('id')->on('kelasnya')->onDelete('cascade');
+            $table->foreign('kelas_id')->references('id')->on('kelasnyas')->onDelete('cascade');
             $table->enum('kelamin', ['laki-laki', 'perempuan']); 
             $table->string('tempat_lahir');
             $table->date('tgl_lahir');

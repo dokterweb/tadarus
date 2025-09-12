@@ -10,4 +10,9 @@ class Posnya extends Model
 {
     use HasFactory, SoftDeletes;
     protected $fillable=['pos_name','keterangan'];
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class, 'posnya_id');
+    }
 }
