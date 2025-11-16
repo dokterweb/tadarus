@@ -14,12 +14,10 @@ return new class extends Migration
         Schema::create('ustadzs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->unsignedInteger('kelas_id');
-            $table->foreign('kelas_id')->references('id')->on('kelasnyas')->onDelete('cascade');
-            $table->enum('kelamin', ['laki-laki', 'perempuan']); 
-            $table->string('tempat_lahir');
-            $table->date('tgl_lahir');
-            $table->string('no_hp');
+            $table->unsignedInteger('kelompok_id');
+            $table->foreign('kelompok_id')->references('id')->on('kelompoks')->onDelete('cascade');
+            $table->enum('mengajari', ['tilawah', 'btq']);
+            $table->enum('kelamin', ['laki-laki', 'perempuan']);
             $table->softDeletes();
             $table->timestamps();
         });

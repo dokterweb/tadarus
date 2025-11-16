@@ -2,31 +2,40 @@
 @section('content_title','Siswa')
 
 @section('content')
-    
-    <div class="card card-primary">
-        <div class="card-header">
-            <h3 class="card-title">Edit Data</h3>
-        </div>
-        <form method="POST" action="{{route('siswas.update',$siswa->id)}}" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card card-primary">
+                <div class="card-header">
+                <h3 class="card-title">Edit Data</h3>
+                </div>
+                <form method="POST" action="{{route('siswas.update',$siswa->id)}}">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body">
                         <div class="form-group">
                             <label>Nama Siswa</label>
-                            <input type="text" name="name" class="form-control" value="{{ $siswa->user->name }}">
+                            <input type="text" name="nama_siswa" class="form-control" value="{{$siswa->nama_siswa}}">
+                            @error('nama_siswa')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
-                        @error('name')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
-                            <label >Kelas</label>
-                            <select class="form-control" name="kelas_id" id="kelas_id">
-                                <option value="">Pilih Kelas</option>
-                                @foreach ($kelas as $p)
+                            <label>Kelompok</label>
+                            <select class="form-control" name="kelompok_id">
+                                <option value="">Pilih kelompok</option>
+                                @foreach ($kelompoks as $p)
+                                <option value="{{ $p->id }}" {{ $siswa->kelompok_id == $p->id ? 'selected' : '' }}>{{ $p->nama_kelompok }}</option>
+                                @endforeach
+                            </select>
+                            @error('kelompok_id')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label>Kelas</label>
+                            <select class="form-control" name="kelas_id">
+                                <option value="">Pilih kelas</option>
+                                @foreach ($kelasnya as $p)
                                 <option value="{{ $p->id }}" {{ $siswa->kelas_id == $p->id ? 'selected' : '' }}>{{ $p->nama_kelas }}</option>
                                 @endforeach
                             </select>
@@ -34,171 +43,117 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Ustadz / Ustadzah</label>
-                            <select class="form-control" name="ustadz_id" id="ustadz_id">
-                                @foreach ($ustadz as $p)
-                                <option value="{{ $p->id }}" {{ $siswa->ustadz_id == $p->id ? 'selected' : '' }}>{{ $p->user->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('ustadz_id')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label>Kelamin</label>
                             <select name="kelamin" class="form-control" style="width:100%">
-                                <option value="laki-laki" {{ $siswa->kelamin == 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                <option value="perempuan" {{ $siswa->kelamin == 'perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                <option value="laki-laki" {{ $siswa->kelamin == 'laki-laki' ? 'selected' : '' }}>laki-laki</option>
+                                <option value="perempuan" {{ $siswa->kelamin == 'perempuan' ? 'selected' : '' }}>perempuan</option>
                             </select>
                             @error('kelamin')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Tempat Lahir</label>
-                            <input type="text" name="tempat_lahir" class="form-control" value="{{$siswa->tempat_lahir }}">
-                            @error('tempat_lahir')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Tgl Lahir</label>
-                            <input type="date" name="tgl_lahir" class="form-control" value="{{$siswa->tgl_lahir }}">
-                            @error('tgl_lahir')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Alamat</label>
-                            <input type="text" name="alamat" class="form-control" value="{{$siswa->alamat }}">
-                            @error('alamat')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Nama Ayah</label>
-                            <input type="text" name="nama_ayah" class="form-control" value="{{$siswa->nama_ayah }}">
-                            @error('nama_ayah')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Nama Ibu</label>
-                            <input type="text" name="nama_ibu" class="form-control" value="{{$siswa->nama_ibu }}">
-                            @error('nama_ibu')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >No HP</label>
-                            <input type="number" name="no_hp" class="form-control" value="{{$siswa->no_hp }}">
-                            @error('no_hp')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Email</label>
-                            <input type="text" name="email" class="form-control" value="{{ $siswa->user->email }}">
-                            @error('email')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Password</label>
-                            <input type="password" name="password" class="form-control">
-                            @error('password')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="exampleInputFile">Gambar</label>
-                            <div class="input-group">
-                                <div class="custom-file">
-                                    <input type="file" name="avatar" class="custom-file-input">
-                                    <label class="custom-file-label">Choose file</label>
-                                </div>
-                            </div>
-                            @error('avatar')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        @if ($siswa->user->avatar)
-                            <img src="{{Storage::url($siswa->user->avatar)}}" width="200">
-                        @endif
-                    </div>
-                </div>
-                
-            </div>
-            <!-- /.card-body -->
+                    <!-- /.card-body -->
 
-            <div class="card-footer">
-            <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
+        <div class="col-md-8">
+            <div class="card card-success">
+                <div class="card-header">
+                <h3 class="card-title">List Siswa</h3>
+                </div>
+                <div class="card-body">
+                    <table id="paketTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama Siswa</th>
+                                <th>Kelompok</th>
+                                <th>Kelas</th>
+                                <th>Kelamin</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @forelse ($siswaview as $p)
+                            <tr>
+                                <td>{{$loop->iteration}}</td>
+                                <td>{{$p->nama_siswa}} </td>
+                                <td>{{$p->kelompok->nama_kelompok}} </td>
+                                <td>{{$p->kelasnya->nama_kelas}} </td>
+                                <td>{{$p->kelamin}} </td>
+                                <td class="d-flex align-items-center" style="gap: 5px;">
+                                    <a href="{{route('siswas.edit',$p->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                    <form method="POST" action="{{ route('siswas.destroy', $p->id) }}" style="display: inline;" id="delete-form-{{ $p->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $p->id }})">
+                                            <i class="fas fa-trash-alt"></i> Hapus
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5">No Data</td>
+                        </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-@endsection
-
-@section('scripts')
-<script>
-    $(document).ready(function () {
-        // Ketika Kelas dipilih
-        $('#kelas_id').change(function () {
-            var kelas_id = $(this).val();
-
-            if (kelas_id) {
-                // Mengirim AJAX request untuk mendapatkan ustadz berdasarkan kelas_id
-                $.ajax({
-                    url: '/get-ustadz/' + kelas_id,  // URL AJAX
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (data) {
-                        // Kosongkan dropdown Ustadz
-                        $('#ustadz_id').empty();
-                        
-                        // Tambahkan option default
-                        $('#ustadz_id').append('<option value="">Pilih Ustadz</option>');
-
-                        // Loop dan tambahkan ustadz ke dropdown
-                        $.each(data, function (key, ustadz) {
-                            $('#ustadz_id').append('<option value="' + ustadz.id + '">' + ustadz.user.name + '</option>');
-                        });
-                    },
-                    error: function (xhr, status, error) {
-                        console.log('Terjadi kesalahan saat mengambil data ustadz: ' + error);
-                    }
-                });
-            } else {
-                // Jika tidak ada kelas yang dipilih, kosongkan dropdown Ustadz
-                $('#ustadz_id').empty();
-                $('#ustadz_id').append('<option value="">Pilih Ustadz</option>');
-            }
+     <!-- SweetAlert2 Script -->
+     @if (session('success'))
+     <script>
+         Swal.fire({
+             icon: 'success',
+             title: 'Berhasil',
+             text: "{{ session('success') }}",
+             position: 'top-end',
+             showConfirmButton: false,
+             timer: 1500
+         });
+     </script>
+    @elseif (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "{{ session('error') }}",
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        </script>
+    @endif
+    <script>
+        $(document).ready(function () {
+          $('#paketTable').DataTable();
         });
-    });
-</script>
+        function deleteConfirmation(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan dihapus dan tidak dapat dipulihkan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Jika tombol "Ya, Hapus!" ditekan, kirim form untuk menghapus data
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+    </script>
 @endsection

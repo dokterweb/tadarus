@@ -1,176 +1,313 @@
 <?php
 
 namespace App\Http\Controllers;
-use PDF;
+
+use Log;
 use Carbon\Carbon;
-use App\Models\Iqro;
 use App\Models\Siswa;
-use App\Exports\IqroExport;
-use App\Models\Iqro_history;
+use App\Models\Kelompok;
+use App\Models\Jenisiqro;
+use App\Models\Iqrohistory;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Absensi_siswa;
+use App\Models\Absensi_ustadz;
+use Illuminate\Support\Facades\DB;
 
 class IqroController extends Controller
 {
+   /*  public function index()
+    {
+        $siswas = Siswa::whereHas('kelompok', function($q) {
+            $q->where('pelajaran', 'btq');
+        })->get();
+        return view('iqros.index',compact('siswas'));
+    } */
+
     public function index()
     {
-        $iqros = Iqro::all();
-        return view('iqros.index',compact('iqros'));
-    }
-
-    public function showIqroHistory($siswa_id)
-    {
-        // Ambil data siswa beserta iqro dan iqro histories
-        $siswa = Siswa::with(['user', 'kelasnya', 'iqros.iqroHistories'])->findOrFail($siswa_id);
+        $user = auth()->user();
     
-        // Mengambil semua iqro terkait siswa
-        $iqros = $siswa->iqros;
-        $iqro_id = $iqros->first()->id;
-        
-        // Mengambil iqro_histories terkait siswa
-        $iqroHistories = $siswa->iqros->flatMap(function($iqro) {
-            return $iqro->iqroHistories; // Mengambil semua iqro histories terkait iqro
+        // base query
+        $siswasQuery = Siswa::with('kelompok')
+        ->whereHas('kelompok', function ($q) {
+            $q->where('pelajaran', 'btq');
         });
+        $kelompoksQuery = Kelompok::query()->orderBy('nama_kelompok');
     
-        // Kirim data siswa, iqro, iqroHistories ke view
-        return view('iqros.history', compact('siswa', 'siswa_id', 'iqros', 'iqro_id', 'iqroHistories'));
-    }
+        // ================= 1. ADMIN =================
+        if ($user->hasRole('admin')) {
     
-    public function store(Request $request, $siswa_id)
-    {
-        // Validasi input dari form
-        $request->validate([
-            'tgl_iqro'      => 'required|date',
-            'iqro_jilid'    => 'required|string',
-            'halaman'       => 'required|integer',
-            'nilai'         => 'required|integer',
-            'keterangan'    => 'nullable|string',
-            'iqro_id'      => 'required|integer|exists:iqros,id', 
-        ]);
-        $siswa_id = $request->input('siswa_id'); // Asumsikan siswa_id dikirim dari form
-        // Menyimpan data ke tabel iqro_histories
-        $iqroHistory = new Iqro_history();
-        $iqroHistory->iqro_id = $request->iqro_id; 
-        $iqroHistory->iqro_jilid = $request->iqro_jilid;
-        $iqroHistory->halaman = $request->halaman;
-        $iqroHistory->nilai = $request->nilai;
-        $iqroHistory->keterangan = $request->keterangan;
-        $iqroHistory->tgl_iqro = $request->tgl_iqro;
-        
-        // Simpan data
-        $iqroHistory->save();
+            // tidak ada filter ekstra:
+            // - semua siswa
+            // - semua kelompok (tilawah & btq)
     
-        // Redirect kembali ke halaman history iqro siswa
-        return redirect()->route('iqro-history.show', ['siswa_id' => $siswa_id])
-                         ->with('success', 'Data iqro berhasil disimpan.');
-    }
+        // ================= 2. ADMIN PUTRA =================
+        } elseif ($user->hasRole('adminputra')) {
     
-    public function edit($siswa_id, $id)
-    {
-        // Ambil data iqro_history berdasarkan id
-        $iqroHistory = Iqro_history::findOrFail($id);
-
-        // Kirim data iqroHistory ke AJAX
-        return response()->json([
-            'iqroHistory' => $iqroHistory,
-        ]);
-    }
-
-
-    public function update(Request $request, $siswa_id, $id)
-    {
-        // Validasi input
-        $request->validate([
-            'tgl_iqro'   => 'required|date',
-            'iqro_jilid' => 'required|string',
-            'halaman'    => 'required|integer',
-            'nilai'      => 'required|integer',
-            'keterangan' => 'nullable|string',
-        ]);
+            // hanya siswa laki-laki
+            $siswasQuery->where('kelamin', 'laki-laki');
     
-        // Temukan iqro_history berdasarkan id
-        $iqroHistory = Iqro_history::findOrFail($id);
+        // ================= 3. ADMIN PUTRI =================
+        } elseif ($user->hasRole('adminputri')) {
     
-        // Update data iqro_history
-        $iqroHistory->iqro_jilid = $request->iqro_jilid;
-        $iqroHistory->halaman = $request->halaman;
-        $iqroHistory->nilai = $request->nilai;
-        $iqroHistory->keterangan = $request->keterangan;
-        $iqroHistory->tgl_iqro = $request->tgl_iqro;
+            // hanya siswa perempuan
+            $siswasQuery->where('kelamin', 'perempuan');
     
-        // Simpan perubahan
-        $iqroHistory->save();
+        // ================= 4. USTADZ =================
+        } elseif ($user->hasRole('ustadz')) {
     
-        // Redirect kembali ke halaman history iqro siswa
-        return redirect()->route('iqro-history.show', ['siswa_id' => $siswa_id])
-                         ->with('success', 'Data iqro berhasil diperbarui.');
-    }
+            $ustadz = $user->ustadz;   // relasi di model User: hasOne(Ustadz::class)
+            if (!$ustadz) {
+                abort(403, 'Data ustadz tidak ditemukan.');
+            }
     
-    public function showSiswaHistory()
-    {
-        // Ambil data siswa yang sedang login
-        $siswa = Auth::user()->siswa; // Asumsikan ada relasi antara User dan Siswa
-        
-        // Ambil semua history sabaq yang terkait dengan siswa
-        $iqroHistories = $siswa->iqroHistories()->get();
-
-        return view('iqros.siswa_history', compact('iqroHistories'));
-    }
+            $kelompok = $ustadz->kelompok; // relasi di model Ustadz: belongsTo(Kelompok::class)
+            if (!$kelompok) {
+                abort(403, 'Kelompok ustadz tidak ditemukan.');
+            }
     
-    public function destroy($id)
-    {
-        // Temukan history berdasarkan id
-        $iqroHistory = Iqro_history::findOrFail($id);
-
-        // Hapus data
-        $iqroHistory->delete();
-
-        // Kembalikan response sukses
-        return response()->json(['status' => 'success']);
-    }
-
-    public function laporan(Request $request)
-    {
-        $start_date = $request->input('start_date');
-        $end_date = $request->input('end_date');
-        
-        if (!$start_date && !$end_date) {
-            $start_date = Carbon::now()->startOfMonth()->toDateString();
-            $end_date = Carbon::now()->toDateString();
+            // cek pelajaran: harus sama dengan kolom "mengajari" di ustadz
+            // kalau tidak sama, ya secara logika dia tidak mengajar tadarus di sini
+            if ($kelompok->pelajaran !== $ustadz->mengajari) {
+                abort(403, 'Kelompok ini tidak sesuai dengan pelajaran yang diajar ustadz.');
+            }
+    
+            // gender siswa ditentukan oleh jenis kelompok
+            $gender = $kelompok->jenis === 'putra'
+                ? 'laki-laki'
+                : 'perempuan';
+    
+            // untuk ustadz, kelompok yang ditampilkan cukup kelompok miliknya saja
+            $kelompoksQuery->where('id', $kelompok->id);
+    
+            // siswa:
+            $siswasQuery
+                // ->where('kelompok_id', $kelompok->id)
+                ->where('kelamin', $gender)
+                ->whereHas('kelompok', function ($q) use ($ustadz) {
+                    $q->where('pelajaran', $ustadz->mengajari);
+                });
+    
+        } else {
+            // role tidak dikenali
+            abort(403, 'Anda tidak memiliki akses.');
         }
+    
+        $siswas    = $siswasQuery->orderBy('nama_siswa')->get();
+        $kelompoks = $kelompoksQuery->get();
+    
+        return view('tadarus.index', compact('siswas', 'kelompoks'));
+    }
 
-        $start_date = Carbon::parse($start_date)->startOfDay();
-        $end_date = Carbon::parse($end_date)->endOfDay();
+    public function create()
+    {
+        // $kelompoks = Kelompok::select('id','nama_kelompok')->orderBy('nama_kelompok')->get();
+        $kelompoks = Kelompok::select('id','nama_kelompok')
+        ->where('pelajaran', 'btq')   // ← filter kelompok
+        ->orderBy('nama_kelompok')
+        ->get();
 
+        $jenisiqros = Jenisiqro::all();
 
-        // Ambil data iqro berdasarkan rentang tanggal yang dipilih
-        $iqros = Iqro_history::whereBetween('tgl_iqro', [$start_date, $end_date])
-            ->with(['iqro', 'iqro.siswa'])  // Menyertakan data iqro dan siswa
+        return view('iqros.create', compact('kelompoks','jenisiqros'));
+    }
+
+    public function getSiswaByKelompok($kelompokId)
+    {
+        $siswas = Siswa::where('kelompok_id', $kelompokId)->get();
+        
+        return response()->json($siswas);
+    }
+
+    public function store(Request $request)
+    {
+        // Validasi umum
+        $base = $request->validate([
+            'tgl'               => 'required|date',
+            'kelompok_id'       => 'required|integer|exists:kelompoks,id',
+            'siswa_id'          => 'required|integer|exists:siswas,id',
+            'status'            => 'required|in:hadir,ghoib,izin,tugas,sakit,pulang',
+            'keterangan'        => 'nullable|string',
+        ]);
+    
+        // Jika BUKAN hadir → cukup simpan absensi
+        if ($base['status'] !== 'hadir') {
+            Absensi_siswa::create([
+                'tgl_absen' => $base['tgl'],
+                'status'    => $base['status'],
+                'siswa_id'  => $base['siswa_id'],
+                'keterangan'=> $base['keterangan'] ?? null, // opsional
+            ]);
+    
+            return back()->with('success','Absensi tersimpan (bukan hadir).');
+        }
+    
+        // Jika HADIR → validasi tambahan untuk tadarus
+        $more = $request->validate([
+            'jenisiqro_id'    => 'required|integer',
+            'nilaibacaan'  => 'required|string|max:255',
+            'hal_awal'      => 'required|integer|min:1',
+            'hal_akhir'     => 'required|integer|min:1|gte:hal_awal',
+        ]);
+    
+        try {
+            DB::transaction(function () use ($base, $more, $request) {
+    
+                // Simpan tadarus_history
+                $iqrohistory = Iqrohistory::create([
+                    'siswa_id'       => $base['siswa_id'],
+                    'ustadz_id'      => auth()->id(), // menggunakan Auth
+                    'jenisiqro_id'  => $more['jenisiqro_id'],
+                    'nilaibacaan'   => $more['nilaibacaan'],
+                    'hal_awal'       => $more['hal_awal'],
+                    'hal_akhir'      => $more['hal_akhir'],
+                    'tgl_iqro'      => $base['tgl'],
+                ]);
+                
+                // Simpan absensi hadir untuk siswa
+                $absensi_siswa = Absensi_siswa::updateOrCreate(
+                    ['tgl_absen' => $base['tgl'], 'siswa_id' => $base['siswa_id']],
+                    ['status' => 'hadir', 'keterangan' => $base['keterangan'] ?? null]
+                );
+                
+                // Simpan absensi hadir untuk ustadz
+                $absensi_ustadz = Absensi_ustadz::updateOrCreate(
+                    ['tgl_absen' => $base['tgl'], 'ustadz_id' => auth()->id()],
+                    ['status' => 'hadir', 'keterangan' => 'Iqro input oleh ustadz']
+                );
+                
+            });
+    
+            return back()->with('success','Tadarus & absensi hadir tersimpan.');
+        } catch (\Exception $e) {
+            \Log::error('Error during transaction: ' . $e->getMessage());
+            return back()->with('error','Gagal menyimpan: ' . $e->getMessage());
+        }
+    }
+    
+    // IqroController.php
+    public function getHistories($siswaId)
+    {
+        $histories = Iqrohistory::with('jenisiqro')
+            ->where('siswa_id', $siswaId)
+            ->orderBy('tgl_iqro', 'desc')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id'           => $row->id,
+                    'tgl_iqro'     => $row->tgl_iqro,
+                    'nama_iqro'    => optional($row->jenisiqro)->nama_iqro,
+                    'hal_awal'     => $row->hal_awal,
+                    'hal_akhir'    => $row->hal_akhir,
+                    'nilaibacaan' => $row->nilaibacaan,
+                ];
+            });
+
+        return response()->json($histories);
+    }
+
+       public function edit($id)
+    {
+        // Ambil data iqrohistory berdasarkan ID
+        $iqro = Iqrohistory::findOrFail($id);
+
+        // Ambil data kelompok dan jenis iqro untuk dropdown
+        $kelompoks = Kelompok::select('id', 'nama_kelompok')->orderBy('nama_kelompok')->get();
+        $jenisiqros = Jenisiqro::all();
+        $absensi = Absensi_siswa::where('siswa_id', $iqro->siswa_id)
+        ->whereDate('tgl_absen', $iqro->tgl_iqro)
+        ->first();
+
+        // Kirim data ke view
+        return view('iqros.edit', compact('iqro', 'kelompoks', 'jenisiqros','absensi'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        // Validasi umum
+        $base = $request->validate([
+            'tgl'               => 'required|date',
+            'kelompok_id'       => 'required|integer|exists:kelompoks,id',
+            'siswa_id'          => 'required|integer|exists:siswas,id',
+            'status'            => 'required|in:hadir,ghoib,izin,tugas,sakit,pulang',
+            'keterangan'        => 'nullable|string',
+        ]);
+
+        // Validasi tambahan untuk iqro jika hadir
+        $more = $request->validate([
+            'jenisiqro_id'  => 'required|integer',
+            'nilaibacaan'  => 'required|string|max:255',
+            'hal_awal'      => 'required|integer|min:1',
+            'hal_akhir'     => 'required|integer|min:1|gte:hal_awal',
+        ]);
+
+        try {
+            DB::transaction(function () use ($base, $more, $request, $id) {
+
+                // Cek apakah status absen adalah "hadir"
+                if ($base['status'] === 'hadir') {
+
+                    // Jika hadir, lakukan update pada iqrohistory
+                    $iqro = Iqrohistory::findOrFail($id);
+
+                    $iqro->update([
+                        'siswa_id'      => $base['siswa_id'],
+                        'ustadz_id'     => auth()->id(),
+                        'jenisiqro_id'  => $more['jenisiqro_id'],
+                        'nilaibacaan'  => $more['nilaibacaan'],
+                        'hal_awal'      => $more['hal_awal'],
+                        'hal_akhir'     => $more['hal_akhir'],
+                        'tgl_iqro'      => $base['tgl'],
+                    ]);
+                } else {
+                    // Jika status absen selain "hadir", hapus iqrohistory yang ada
+                    $iqro = Iqrohistory::findOrFail($id);
+                    $iqro->delete();
+                }
+
+                // Simpan absensi siswa
+                Absensi_siswa::updateOrCreate(
+                    ['tgl_absen' => $base['tgl'], 'siswa_id' => $base['siswa_id']],
+                    ['status' => $base['status'], 'keterangan' => $base['keterangan'] ?? null]
+                );
+
+                // Simpan absensi ustadz
+                Absensi_ustadz::updateOrCreate(
+                    ['tgl_absen' => $base['tgl'], 'ustadz_id' => auth()->id()],
+                    ['status' => $base['status'], 'keterangan' => 'Iqro input oleh ustadz']
+                );
+            });
+
+            return back()->with('success', 'Data berhasil diperbarui.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
+        }
+    }
+
+    public function show($id)
+    {
+        // Ambil detail siswa berdasarkan ID
+        $siswa = Siswa::with('kelompok', 'kelasnya') // Relasi dengan kelompok dan kelas
+            ->findOrFail($id);  // Mengambil siswa berdasarkan ID yang diberikan
+
+        // Ambil histori tadarus berdasarkan siswa_id, urutkan berdasarkan tanggal
+        $iqroHistories = Iqrohistory::where('siswa_id', $id)
+            ->orderBy('tgl_iqro', 'desc') // Urutkan berdasarkan tanggal tadarus
+            ->paginate(10);
+
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+    
+        // Hitung jumlah absensi berdasarkan status untuk bulan ini
+        $absensiCounts = Absensi_siswa::where('siswa_id', $id)
+            ->whereMonth('tgl_absen', $currentMonth) // Filter berdasarkan bulan
+            ->whereYear('tgl_absen', $currentYear)  // Filter berdasarkan tahun
+            ->selectRaw('status, COUNT(*) as count')
+            ->groupBy('status')
             ->get();
-
-        if ($request->has('pdf')) {
-            // Pastikan $start_date dan $end_date juga diteruskan ke view
-            $pdf = PDF::loadView('iqros.laporan_pdf', compact('iqros', 'start_date', 'end_date'))
-                        ->setPaper('a4', 'landscape'); // Menetapkan kertas PDF dan orientasi
-            return $pdf->download('laporan_iqro_' . $start_date . '_to_' . $end_date . '.pdf');
-        }
-        // Kirim hasil ke view
-        return view('iqros.laporan', compact('iqros'));
+        
+        // Kembalikan data ke view 'tadarus.show'
+        return view('iqros.show', compact('siswa', 'iqroHistories','absensiCounts'));
     }
 
-    public function exportToExcel(Request $request)
-    {
-        // dd($request->all());
-        $start_date = $request->input('start_date');
-        $end_date = $request->input('end_date');
-    
-        // Validasi tanggal
-        if (!$start_date || !$end_date) {
-            return redirect()->route('iqros.laporan')->with('error', 'Tanggal harus dipilih.');
-        }
-    
-        // Export to Excel
-        return Excel::download(new IqroExport($start_date, $end_date), 'laporan_iqro_' . $start_date . '_to_' . $end_date . '.xlsx');
-    }
 }

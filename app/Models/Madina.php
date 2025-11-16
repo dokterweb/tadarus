@@ -8,18 +8,8 @@ class Madina extends Model
 {
     protected $table = 'madina';
 
-    public function sabaqHistories()
+    public function tadarusHistories()
     {
-        return $this->hasMany(Sabaq_history::class, 'surat_id');
-    }
-
-    public function sabqiHistories()
-    {
-        return $this->hasMany(Sabqi_history::class, 'surat_id');
-    }
-
-    public function manzilHistories()
-    {
-        return $this->hasMany(Manzil_history::class, 'surat_id');
+        return $this->hasMany(TadarusHistory::class, 'surat_id');
     }
 }

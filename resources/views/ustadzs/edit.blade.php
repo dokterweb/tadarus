@@ -1,88 +1,44 @@
 @extends('layouts.app')
-@section('content_title','Ustadz')
+@section('content_title','Ustadz / Ustadzah')
 
 @section('content')
-    
-    <div class="card card-primary">
-        <div class="card-header">
-            <h3 class="card-title">Tambah Data</h3>
-        </div>
-        <form method="POST" action="{{route('ustadzs.update',$ustadz->id)}}" enctype="multipart/form-data">
-            @csrf
-            @method('PUT')
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card card-primary">
+                <div class="card-header">
+                <h3 class="card-title">Edit Data</h3>
+                </div>
+                <form method="POST" action="{{route('ustadzs.update', $ustadz->id)}}">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body">
                         <div class="form-group">
-                            <label>Nama Ustadz</label>
-                            <input type="text" name="name" class="form-control" value="{{ $ustadz->user->name }}">
+                            <label>Nama Ustadz / Ustadzah</label>
+                            <input type="text" name="name" class="form-control" value="{{$ustadz->user->name}}">
+                            @error('name')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
-                        @error('name')
-                            <span class="text-danger">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
-                            <label >Kelas</label>
-                            <select class="form-control" name="kelas_id">
-                                @foreach ($kelas as $p)
-                                <option value="{{ $p->id }}" {{ $ustadz->kelas_id == $p->id ? 'selected' : '' }}>{{ $p->nama_kelas }}</option>
+                            <label>Kelompok</label>
+                            <select class="form-control" name="kelompok_id">
+                                <option value="">Pilih kelompok</option>
+                                @foreach ($kelompoks as $p)
+                                
+                                <option value="{{ $p->id }}" {{ $ustadz->kelompok_id == $p->id ? 'selected' : '' }}>{{ $p->nama_kelompok }}</option>
                                 @endforeach
                             </select>
-                            @error('kelas_id')
+                            @error('kelompok_id')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label>Kelamin</label>
-                            <select name="kelamin" class="form-control" style="width:100%">
-                                <option value="laki-laki" {{ $ustadz->kelamin == 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                <option value="perempuan" {{ $ustadz->kelamin == 'perempuan' ? 'selected' : '' }}>Perempuan</option>
-                            </select>
-                            @error('kelamin')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Tempat Lahir</label>
-                            <input type="text" name="tempat_lahir" class="form-control" value="{{$ustadz->tempat_lahir }}">
-                            @error('tempat_lahir')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >Tgl Lahir</label>
-                            <input type="date" name="tgl_lahir" class="form-control" value="{{$ustadz->tgl_lahir }}">
-                            @error('tgl_lahir')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label >No HP</label>
-                            <input type="number" name="no_hp" class="form-control" value="{{$ustadz->no_hp }}">
-                            @error('no_hp')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label >Email</label>
-                            <input type="text" name="email" class="form-control" value="{{ $ustadz->user->email }}">
+                            <input type="text" name="email" class="form-control"  value="{{$ustadz->user->email}}">
                             @error('email')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                    </div>
-                    <div class="col-md-6">
                         <div class="form-group">
                             <label >Password</label>
                             <input type="password" name="password" class="form-control">
@@ -91,36 +47,105 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="exampleInputFile">Gambar</label>
-                            <div class="input-group">
-                                <div class="custom-file">
-                                    <input type="file" name="avatar" class="custom-file-input">
-                                    <label class="custom-file-label">Choose file</label>
-                                </div>
-                            </div>
-                            @error('avatar')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        @if ($ustadz->user->avatar)
-                            <img src="{{Storage::url($ustadz->user->avatar)}}" width="200">
-                        @endif
-                    </div>
-                </div>
-                
-            </div>
-            <!-- /.card-body -->
+                    <!-- /.card-body -->
 
-            <div class="card-footer">
-            <button type="submit" class="btn btn-primary">Submit</button>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
+        <div class="col-md-8">
+            <div class="card card-success">
+                <div class="card-header">
+                <h3 class="card-title">List Admin Siswa</h3>
+                </div>
+                <div class="card-body">
+                    <table id="paketTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama Admin</th>
+                                <th>Kelompok</th>
+                                <th>Email</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @forelse ($ustadzview as $p)
+                            <tr>
+                                <td>{{$loop->iteration}}</td>
+                                <td>{{$p->user->name}} </td>
+                                <td>{{$p->kelompok->nama_kelompok}} </td>
+                                <td>{{$p->user->email}} </td>
+                                <td class="d-flex align-items-center" style="gap: 5px;">
+                                    {{-- <a href="{{route('adminsiswas.edit',$p->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                    <form method="POST" action="{{ route('adminsiswas.destroy', $p->id) }}" style="display: inline;" id="delete-form-{{ $p->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $p->id }})">
+                                            <i class="fas fa-trash-alt"></i> Hapus
+                                        </button>
+                                    </form> --}}
+                                    
+                                </td>
+                            </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5">No Data</td>
+                        </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
-        
-    
+     <!-- SweetAlert2 Script -->
+     @if (session('success'))
+     <script>
+         Swal.fire({
+             icon: 'success',
+             title: 'Berhasil',
+             text: "{{ session('success') }}",
+             position: 'top-end',
+             showConfirmButton: false,
+             timer: 1500
+         });
+     </script>
+    @elseif (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "{{ session('error') }}",
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        </script>
+    @endif
+    <script>
+        $(document).ready(function () {
+          $('#paketTable').DataTable();
+        });
+        function deleteConfirmation(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Data ini akan dihapus dan tidak dapat dipulihkan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Jika tombol "Ya, Hapus!" ditekan, kirim form untuk menghapus data
+                    document.getElementById('delete-form-' + id).submit();
+                }
+            });
+        }
+    </script>
 @endsection

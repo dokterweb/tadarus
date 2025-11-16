@@ -10,15 +10,20 @@ class Ustadz extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id', 'kelas_id', 'nama_ustadz', 'kelamin', 'tempat_lahir', 'tgl_lahir', 'no_hp'];
+    protected $fillable = ['user_id', 'kelompok_id', 'nama_ustadz','mengajari','kelamin'];
 
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    public function kelasnya()
+    public function kelompok()
     {
-        return $this->belongsTo(Kelasnya::class, 'kelas_id');
+        return $this->belongsTo(kelompok::class, 'kelompok_id');
+    }
+
+    public function absensi()
+    {
+        return $this->hasMany(Absensi_ustadz::class, 'ustadz_id');
     }
 }

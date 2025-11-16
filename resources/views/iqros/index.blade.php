@@ -2,75 +2,71 @@
 @section('content_title','Siswa')
 
 @section('content')
-    
-    <div class="card">
-        <div class="card-body">
-            <table id="paketTable" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Nama Siswa</th>
-                        <th>Nama Kelas</th>
-                        <th>Nama Ustadz</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                @forelse ($iqros as $p)
-                    <tr>
-                        <td>{{$loop->iteration}}</td>
-                        <td>{{$p->siswa->user->name}} </td>
-                        <td>{{$p->siswa->kelasnya->nama_kelas}} </td>
-                        <td>{{$p->ustadz->user->name}} </td>
-                        <td class="d-flex align-items-center" style="gap: 5px;">
-                           <a href="{{route('iqro-history.show',$p->siswa_id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
-                           {{--   <form method="POST" action="{{ route('siswas.destroy', $p->id) }}" style="display: inline;" id="delete-form-{{ $p->id }}">
-                                @csrf
-                                @method('DELETE')
-                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $p->id }})">
-                                    <i class="fas fa-trash-alt"></i> Hapus
-                                </button>
-                            </form> --}}
-                            
-                        </td>
-                    </tr>
-                @empty
-                <tr>
-                    <td colspan="5">No Data</td>
-                </tr>
-                @endforelse
-                </tbody>
-            </table>
+    <div class="row">    
+        <div class="col-md-12">
+            <div class="card card-success">
+                <div class="card-header">
+                <h3 class="card-title">List Siswa</h3>
+                </div>
+                <div class="card-body">
+                    <table id="paketTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama Siswa</th>
+                                <th>Kelompok</th>
+                                <th>Kelas</th>
+                                <th>Kelamin</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @forelse ($siswas as $p)
+                            <tr>
+                                <td>{{$loop->iteration}}</td>
+                                <td>{{$p->nama_siswa}} </td>
+                                <td>{{$p->kelompok->nama_kelompok}} </td>
+                                <td>{{$p->kelasnya->nama_kelas}} </td>
+                                <td>{{$p->kelamin}} </td>
+                                <td class="d-flex align-items-center" style="gap: 5px;">
+                                    <a href="{{route('iqros.show',$p->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                </td>
+                            </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5">No Data</td>
+                        </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    
-@endsection
 
-
-<!-- SweetAlert2 Script -->
-@section('scripts')
-    @if (session('success'))
-    <script>
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil',
-            text: "{{ session('success') }}",
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    </script>
+     <!-- SweetAlert2 Script -->
+     @if (session('success'))
+     <script>
+         Swal.fire({
+             icon: 'success',
+             title: 'Berhasil',
+             text: "{{ session('success') }}",
+             position: 'top-end',
+             showConfirmButton: false,
+             timer: 1500
+         });
+     </script>
     @elseif (session('error'))
-    <script>
-        Swal.fire({
-            icon: 'error',
-            title: 'Oops...',
-            text: "{{ session('error') }}",
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 1500
-        });
-    </script>
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "{{ session('error') }}",
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        </script>
     @endif
     <script>
         $(document).ready(function () {

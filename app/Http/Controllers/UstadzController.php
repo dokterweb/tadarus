@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Ustadz;
-use App\Models\Kelasnya;
+use App\Models\Kelompok;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\StoreUstadzRequest;
-use App\Http\Requests\UpdateUstadzRequest;
+
 
 class UstadzController extends Controller
 {
@@ -18,117 +18,139 @@ class UstadzController extends Controller
     public function index()
     {
         $ustadzs = Ustadz::all();
-        return view('ustadzs.index',compact('ustadzs'));
+        $kelompoks = Kelompok::all();
+        return view('ustadzs.index',compact('ustadzs','kelompoks'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function store(Request $request)
     {
-        $kelas = Kelasnya::all();
-        return view('ustadzs.create',compact('kelas'));
-    }
+         // 1. Validasi input
+         $validated = $request->validate([
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users,email',
+            'password'  => 'required|string|min:6', 
+            'kelompok_id'  => 'required','integer',
+        ]);
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(StoreUstadzRequest $request)
-    {
-        $validated = $request->validated();
-
-        // Simpan avatar jika ada
-        if($request->hasFile('avatar')){
-            $avatarPath = $request->file('avatar')->store('avatars','public');
+        try {
+            DB::transaction(function () use ($validated) {
+    
+                // 2. Buat user baru
+                $user = User::create([
+                    'name'      => $validated['name'],
+                    'email'     => $validated['email'],
+                    'avatar'    => 'images/default-avatar.png', // atau null, sesuai kebutuhanmu
+                    'password'  => Hash::make($validated['password']),
+                ]);
+    
+               
+                $user->assignRole('ustadz');
+    
+                // 4. Simpan ke tabel Ustadz
+                Ustadz::create([
+                    'user_id'       => $user->id,
+                    'kelompok_id'      => $validated['kelompok_id'],
+                ]);
+            });
+    
+            // 5. Redirect dengan flash message (dipakai SweetAlert2 di view)
+            return redirect()
+                ->route('ustadzs')
+                ->with('success', 'Data Ustadz berhasil disimpan!');
+    
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('ustadzs')
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
 
-        // Buat user baru
-        $user = User::create([
-            'name'      => $validated['name'],
-            'email'     => $validated['email'],
-            'avatar'    => $avatarPath ?? null, // Jika tidak ada avatar, nilainya null
-            'password'  => Hash::make($validated['password']),
-        ]);
-
-        // Assign role 'ustadz' ke user
-        $user->assignRole('ustadz'); // Pastikan role 'ustadz' sudah ada di database
-
-        // Simpan data ke tabel ustadzs
-        Ustadz::create([
-            'user_id'       => $user->id,
-            'kelas_id'      => $validated['kelas_id'],
-            'kelamin'       => $validated['kelamin'],
-            'tempat_lahir'  => $validated['tempat_lahir'],
-            'tgl_lahir'     => $validated['tgl_lahir'],
-            'no_hp'         => $validated['no_hp'],
-        ]);
-
-        return redirect()->route('ustadzs.index')->with('success', 'Data Ustadz berhasil disimpan!');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Ustadz $ustadz)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Ustadz $ustadz)
     {
-        $kelas = Kelasnya::all();
-        return  view('ustadzs.edit',compact('ustadz','kelas'));
+        $ustadzview = Ustadz::all();
+        $kelompoks = Kelompok::all();
+        return  view('ustadzs.edit',compact('ustadzview','ustadz','kelompoks'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateUstadzRequest $request, Ustadz $ustadz)
+    public function update(Request $request, Ustadz $ustadz)
     {
-        // Data sudah divalidasi di UpdateustadzRequest
-        $validated = $request->validated();
-
-        // Update data User terkait
-        $userData = [
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
-        ];
-
-        // Cek apakah password diisi, jika iya, update password
-        if ($request->filled('password')) {
-            $userData['password'] = bcrypt($validated['password']);
-        }
-
-        // Cek apakah ada file avatar yang diunggah
-        if ($request->hasFile('avatar')) {
-            // Simpan avatar ke storage dan update path-nya
-            $avatarPath = $request->file('avatar')->store('avatars', 'public');
-            $userData['avatar'] = $avatarPath;
-        }
-
-        // Update data user yang terkait dengan ustadz
-        $ustadz->user->update($userData);
-
-        // Simpan data ke tabel ustadzs
-        $ustadz->update([
-            'kelas_id'      => $validated['kelas_id'],
-            'kelamin'       => $validated['kelamin'],
-            'tempat_lahir'  => $validated['tempat_lahir'],
-            'tgl_lahir'     => $validated['tgl_lahir'],
-            'no_hp'         => $validated['no_hp'],
+        // 1️⃣ Validasi input
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
+            'email'        => 'required|email|unique:users,email,' . $ustadz->user_id,
+            'password'     => 'nullable|string|min:6', // optional, hanya diupdate kalau diisi
+            'kelompok_id'  => 'required|integer',
         ]);
-
-        return redirect()->route('ustadzs.index')->with('success', 'Data ustadz berhasil diperbarui!');
+    
+        try {
+            DB::transaction(function () use ($validated, $ustadz) {
+    
+                // 2️⃣ Ambil data user terkait
+                $user = User::findOrFail($ustadz->user_id);
+    
+                // 3️⃣ Update data user
+                $userData = [
+                    'name'  => $validated['name'],
+                    'email' => $validated['email'],
+                ];
+    
+                if (!empty($validated['password'])) {
+                    $userData['password'] = Hash::make($validated['password']);
+                }
+    
+                $user->update($userData);
+    
+                // 4️⃣ Pastikan role tetap "ustadz"
+                $user->syncRoles(['ustadz']);
+    
+                // 5️⃣ Update tabel Ustadz
+                $ustadz->update([
+                    'kelompok_id' => $validated['kelompok_id'],
+                ]);
+            });
+    
+            // 6️⃣ Jika berhasil
+            return redirect()
+                ->route('ustadzs')
+                ->with('success', 'Data Ustadz berhasil diperbarui!');
+    
+        } catch (\Exception $e) {
+            // 7️⃣ Jika gagal
+            return redirect()
+                ->route('ustadzs')
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
-
-    /**
-     * Remove the specified resource from storage.
-     */
+     
     public function destroy(Ustadz $ustadz)
     {
-        //
+        try {
+            DB::transaction(function () use ($ustadz) {
+    
+                // Ambil user terkait
+                $user = User::find($ustadz->user_id);
+    
+                if ($user) {
+                    // Lepas semua role user ini
+                    $user->syncRoles([]);
+    
+                    // Hapus user (soft delete kalau model User pakai SoftDeletes)
+                    $user->delete();
+                }
+    
+                // Hapus data ustadz
+                $ustadz->delete();
+            });
+    
+            return redirect()
+                ->route('ustadzs')
+                ->with('success', 'Data Ustadz berhasil dihapus!');
+    
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('ustadzs')
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

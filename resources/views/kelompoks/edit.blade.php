@@ -1,0 +1,117 @@
+@extends('layouts.app')
+@section('content_title','Kelompok')
+
+@section('content')
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card card-primary">
+                <div class="card-header">
+                <h3 class="card-title">Tambah Data</h3>
+                </div>
+                <form method="POST" action="{{route('kelompoks.update',$kelompok->id)}}">
+                    @csrf
+                    @method('PUT')
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label >Nama Kelompok</label>
+                            <input type="text" name="nama_kelompok" class="form-control" value="{{$kelompok->nama_kelompok}}">
+                        </div>
+                        <div class="form-group">
+                            <label>pelajaran</label>
+                            <select name="pelajaran" class="form-control" style="width:100%">
+                                <option value="tilawan" {{ $kelompok->pelajaran == 'tilawan' ? 'selected' : '' }}>tilawan</option>
+                                <option value="btq" {{ $kelompok->pelajaran == 'btq' ? 'selected' : '' }}>BTQ</option>
+                            </select>
+                            @error('pelajaran')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label>Jenis</label>
+                            <select name="jenis" class="form-control" style="width:100%">
+                                <option value="putra" {{ $kelompok->jenis == 'putra' ? 'selected' : '' }}>Putra</option>
+                                <option value="putri" {{ $kelompok->jenis == 'putri' ? 'selected' : '' }}>Putri</option>
+                            </select>
+                            @error('jenis')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+
+                    <div class="card-footer">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card card-success">
+                <div class="card-header">
+                <h3 class="card-title">List Kelompok</h3>
+                </div>
+                <div class="card-body">
+                    <table id="paketTable" class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Nama Kelompok</th>
+                                <th>Jenis Pelajaran</th>
+                                <th>Jenis</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @forelse ($kelompokview as $p)
+                            <tr>
+                                <td>{{$loop->iteration}}</td>
+                                <td>{{$p->nama_kelompok}} </td>
+                                <td>{{$p->pelajaran}} </td>
+                                <td>{{$p->jenis}} </td>
+                                <td class="d-flex align-items-center" style="gap: 5px;">
+                                    <form method="POST" action="{{ route('kelompoks.destroy', $p->id) }}" style="display: inline;" id="delete-form-{{ $p->id }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $p->id }})">
+                                            <i class="fas fa-trash-alt"></i> Hapus
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @empty
+                        <tr>
+                            <td colspan="3">No Data</td>
+                        </tr>
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+     <!-- SweetAlert2 Script -->
+     @if (session('success'))
+     <script>
+         Swal.fire({
+             icon: 'success',
+             title: 'Berhasil',
+             text: "{{ session('success') }}",
+             position: 'top-end',
+             showConfirmButton: false,
+             timer: 1500
+         });
+     </script>
+    @elseif (session('error'))
+        <script>
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: "{{ session('error') }}",
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        </script>
+    @endif
+@endsection

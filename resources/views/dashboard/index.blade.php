@@ -20,7 +20,7 @@
             <div class="icon">
                 <i class="fas fa-users"></i>
             </div>
-            <a href="{{route('siswas.index')}}" class="small-box-footer">
+            <a href="{{route('siswas')}}" class="small-box-footer">
               More info <i class="fas fa-arrow-circle-right"></i>
             </a>
           </div>
@@ -37,7 +37,7 @@
             <div class="icon">
                 <i class="fas fa-house-user"></i>
             </div>
-            <a href="{{route('ustadzs.index')}}" class="small-box-footer">
+            <a href="{{route('ustadzs')}}" class="small-box-footer">
               More info <i class="fas fa-arrow-circle-right"></i>
             </a>
           </div>

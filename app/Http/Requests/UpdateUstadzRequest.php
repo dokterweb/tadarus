@@ -35,11 +35,7 @@ class UpdateUstadzRequest extends FormRequest
                 Rule::unique('users')->ignore($ustadz->user->id), // Abaikan email siswa yang sedang diupdate
             ],
             'password'      => ['nullable', 'string', 'min:6'],
-            'kelas_id'      => ['required','integer'],
-            'kelamin'       => ['required', 'string', 'in:laki-laki,perempuan'], 
-            'tempat_lahir'  => ['required', 'string', 'max:255'],
-            'tgl_lahir'     => ['required','date'],
-            'no_hp'         => ['required','string','max:100'],
+            'kelompok_id'      => ['required','integer'],
         ];
     }
 }

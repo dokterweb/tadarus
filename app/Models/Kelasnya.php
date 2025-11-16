@@ -11,11 +11,6 @@ class Kelasnya extends Model
     use HasFactory, SoftDeletes;
     protected $fillable=['nama_kelas'];
 
-    public function ustadzs()
-    {
-        return $this->hasMany(Ustadz::class);
-    }
-
     public function siswas()
     {
         return $this->hasMany(Siswa::class);
