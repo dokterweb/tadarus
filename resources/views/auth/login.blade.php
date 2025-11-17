@@ -14,14 +14,49 @@
   <link rel="stylesheet" href="{{asset('adminlte')}}/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
   <!-- Theme style -->
   <link rel="stylesheet" href="{{asset('adminlte')}}/dist/css/adminlte.min.css">
+  <style>
+    .login-bg-custom {
+        background-color: #ccfbf1 !important;
+    }
+  
+    .login-logo img {
+        max-width: 90px;            /* sesuaikan ukuran logo */
+        margin-bottom: 10px;
+    }
+  
+    .login-logo h2,
+    .login-logo h3 {
+        margin: 0;
+        font-weight: 600;
+    }
+  
+    .login-logo h2 {
+        font-size: 20px;
+        letter-spacing: 2px;
+    }
+  
+    .login-logo h3 {
+        font-size: 18px;
+    }
+  
+    .login-logo {
+        margin-bottom: 25px;
+    }
+  
+    .login-box .card {
+        box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+  </style>
 </head>
-<body class="hold-transition login-page">
+<body class="hold-transition login-page login-bg-custom">
 <div class="login-box">
-  <!-- /.login-logo -->
+  <div class="login-logo">
+    <img src="{{ asset('images/logo.jpg') }}" alt="Logo Pesantren">
+    <h2>SANTRI TILAWAH</h2>
+    <h3>PESANTREN DARUNNAJAH 2 CIPINING</h3>
+  </div>
   <div class="card card-outline card-primary">
-    <div class="card-header text-center">
-      <a href="../../index2.html" class="h1"><b>Tadarus</b>Sys</a>
-    </div>
+    
     <div class="card-body">
       <p class="login-box-msg">Sign in to start your session</p>
         @if ($errors->any())

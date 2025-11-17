@@ -8,6 +8,7 @@ use App\Http\Controllers\UstadzController;
 use App\Http\Controllers\TadarusController;
 use App\Http\Controllers\KelompokController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HariliburController;
 use App\Http\Controllers\JenisiqroController;
 use App\Http\Controllers\AdminsiswaController;
 use App\Http\Controllers\Auth\LoginController;
@@ -19,6 +20,15 @@ Route::get('/', function () {
 
 Route::post('/login',[LoginController::class, 'handleLogin'])->name('login');
 Route::post('/logout',[LoginController::class, 'logout'])->name('logout');
+// FORM GANTI PASSWORD
+Route::get('/password/change', [LoginController::class, 'changePasswordForm'])
+    ->middleware('auth')
+    ->name('password.change');
+
+// PROSES UPDATE PASSWORD
+Route::post('/password/update', [LoginController::class, 'updatePassword'])
+    ->middleware('auth')
+    ->name('password.update');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard',[DashboardController::class, 'index'])->middleware('role:admin|ustadz|siswa')->name('dashboard');
@@ -40,6 +50,17 @@ Route::middleware('auth')->group(function () {
     Route::get('jenisiqros/{jenisiqro}/edit', [JenisiqroController::class, 'edit'])->middleware('role:admin')->name('jenisiqros.edit');
     Route::put('jenisiqros/{jenisiqro}', [JenisiqroController::class, 'update'])->middleware('role:admin')->name('jenisiqros.update');
     Route::delete('jenisiqros/{jenisiqro}', [JenisiqroController::class, 'destroy'])->middleware('role:admin')->name('jenisiqros.destroy');
+
+    Route::get('/hariliburs',[HariliburController::class, 'index'])->middleware('role:admin')->name('hariliburs');
+    Route::get('/hariliburs/create',[HariliburController::class, 'create'])->middleware('role:admin')->name('hariliburs.create'); 
+    Route::post('hariliburs/store', [HariliburController::class, 'store'])->middleware('role:admin')->name('hariliburs.store');
+    Route::get('/hariliburs/{id}/edit', [HariliburController::class, 'edit'])->middleware('role:admin')->name('hariliburs.edit');
+    Route::put('/hariliburs/{id}', [HariliburController::class, 'update'])->middleware('role:admin')->name('hariliburs.update');
+    Route::delete('/hariliburs/{id}/destroy', [HariliburController::class, 'destroy'])->middleware('role:admin')->name('hariliburs.destroy');
+    Route::get('hariliburs/bulanan', [HariliburController::class, 'createMonthly'])->name('hariliburs.monthly');
+    Route::post('hariliburs/bulanan', [HariliburController::class, 'storeMonthly'])->name('hariliburs.monthly.store');
+    Route::get('/cek-hari-libur/{tanggal}', [HariliburController::class, 'cekHariLibur'])->name('harilibur.cek');
+    
 
     Route::get('/adminsiswas',[AdminsiswaController::class, 'index'])->middleware('role:admin')->name('adminsiswas');
     Route::post('adminsiswas/store', [AdminsiswaController::class, 'store'])->middleware('role:admin')->name('adminsiswas.store');

@@ -96,7 +96,7 @@ class IqroController extends Controller
         $siswas    = $siswasQuery->orderBy('nama_siswa')->get();
         $kelompoks = $kelompoksQuery->get();
     
-        return view('tadarus.index', compact('siswas', 'kelompoks'));
+        return view('iqros.index', compact('siswas', 'kelompoks'));
     }
 
     public function create()

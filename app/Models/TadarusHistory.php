@@ -22,6 +22,12 @@ class TadarusHistory extends Model
         return $this->belongsTo(Madina::class, 'surat_id');
     }
     
+    public function ustadz()
+    {
+        return $this->belongsTo(Ustadz::class, 'ustadz_id', 'id');
+    }
+
+
     public function absensi_siswa()
     {
         return $this->hasOne(Absensi_siswa::class, 'siswa_id', 'siswa_id')
