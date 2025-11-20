@@ -10,6 +10,7 @@ use App\Http\Controllers\KelompokController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HariliburController;
 use App\Http\Controllers\JenisiqroController;
+use App\Http\Controllers\AbsensiswaController;
 use App\Http\Controllers\AdminsiswaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\AbsenustadzController;
@@ -81,12 +82,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('siswas/{ustadz}', [SiswaController::class, 'destroy'])->middleware('role:admin')->name('siswas.destroy');
     // Route::resource('siswas', SiswaController::class)->middleware('role:admin');
     
-    Route::get('/tadaruses',[TadarusController::class, 'index'])->middleware('role:admin|ustadz')->name('tadaruses');
-    Route::get('/tadaruses/create',[TadarusController::class, 'create'])->middleware('role:admin|ustadz')->name('tadaruses.create');
-    Route::get('/tadaruses',[TadarusController::class, 'index'])->middleware('role:admin|ustadz')->name('tadaruses');
-    Route::get('tadarus-history/{siswa_id}', [TadarusController::class, 'showTadarusHistory'])->middleware('role:admin|ustadz')->name('tadarus-history.show');
-    Route::get('get-surat-details/{sura_no}', [TadarusController::class, 'getSuratDetails'])->middleware('role:admin|ustadz')->name('get.surat.details');
-    Route::post('/tadaruses/store', [TadarusController::class, 'store'])->middleware('role:admin|ustadz')->name('tadarus.store');
+    Route::get('/tadaruses',[TadarusController::class, 'index'])->middleware('role:admin|ustadz')
+    ->middleware('tilawah')->name('tadaruses');
+    Route::get('/tadaruses/create',[TadarusController::class, 'create'])->middleware('role:admin|ustadz','tilawah')->name('tadaruses.create');
+    Route::get('/tadaruses',[TadarusController::class, 'index'])->middleware('role:admin|ustadz','tilawah')->name('tadaruses');
+    Route::get('tadarus-history/{siswa_id}', [TadarusController::class, 'showTadarusHistory'])->middleware('role:admin|ustadz','tilawah')->name('tadarus-history.show');
+    Route::get('get-surat-details/{sura_no}', [TadarusController::class, 'getSuratDetails'])->middleware('role:admin|ustadz','tilawah')->name('get.surat.details');
+    Route::post('/tadaruses/store', [TadarusController::class, 'store'])->middleware('role:admin|ustadz','tilawah')->name('tadarus.store');
     // Route::post('/tadaruses/update/{id}', [TadarusController::class, 'update'])
     // ->middleware('role:admin|ustadz')
     // ->name('tadarus.update');
@@ -131,7 +133,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/tadaruses/{id}/update', [TadarusController::class, 'update'])->middleware('role:admin|ustadz')->name('tadaruses.update');
 
     // Route untuk delete tadarus
-    Route::delete('/tadaruses/{id}/destroy', [TadarusController::class, 'destroy'])->middleware('role:admin|ustadz')->name('tadarus.destroy');
+    Route::delete('/tadaruses/{id}/destroy', [TadarusController::class, 'destroy'])->middleware('role:admin|ustadz')->name('tadaruses.destroy');
 
 
     Route::get('/absensiustadz', [AbsenustadzController::class, 'index'])->middleware('role:admin')->name('absensiustadz.index');
@@ -140,15 +142,17 @@ Route::middleware('auth')->group(function () {
     Route::put('absensiustadz/{absensiustadz}', [AbsenustadzController::class, 'update'])->middleware('role:admin')->name('absensiustadz.update');
     Route::delete('absensiustadz/{absensiustadz}', [AbsenustadzController::class, 'destroy'])->middleware('role:admin')->name('absensiustadz.destroy');
 
-    Route::get('/iqros',[IqroController::class, 'index'])->middleware('role:admin')->name('iqros');
-    Route::get('/iqros/create',[IqroController::class, 'create'])->middleware('role:admin')->name('iqros.create');
-    Route::post('/iqros/store',[IqroController::class, 'store'])->middleware('role:admin')->name('iqros.store');
+    Route::get('/absensiswas', [AbsensiswaController::class, 'index'])->middleware('role:admin')->name('absensiswas.index');
+
+    Route::get('/iqros',[IqroController::class, 'index'])->middleware('role:admin|ustadz','btq')->name('iqros');
+    Route::get('/iqros/create',[IqroController::class, 'create'])->middleware('role:admin|ustadz','btq')->name('iqros.create');
+    Route::post('/iqros/store',[IqroController::class, 'store'])->middleware('role:admin|ustadz','btq')->name('iqros.store');
     Route::get('/iqros/get-siswa-by-kelompok/{kelompokId}', [IqroController::class, 'getSiswaByKelompok']);
-    Route::get('/iqros/{id}/edit', [IqroController::class, 'edit'])->middleware('role:admin')->name('iqros.edit');
-    Route::put('/iqros/{id}', [IqroController::class, 'update'])->middleware('role:admin')->name('iqros.update');
+    Route::get('/iqros/{id}/edit', [IqroController::class, 'edit'])->middleware('role:admin|ustadz','btq')->name('iqros.edit');
+    Route::put('/iqros/{id}', [IqroController::class, 'update'])->middleware('role:admin|ustadz','btq')->name('iqros.update');
     // routes/web.php atau routes/api.php
     Route::get('/api/siswas/{siswa}/iqrohistories', [IqroController::class, 'getHistories']);
     Route::get('/iqros/{id}', [IqroController::class, 'show'])->name('iqros.show');
-
+    Route::delete('/iqros/{id}/destroy', [IqroController::class, 'destroy'])->middleware('role:admin|ustadz','btq')->name('iqros.destroy');
 
 });

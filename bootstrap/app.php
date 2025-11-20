@@ -15,6 +15,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+             // custom untuk mengajari
+             'btq'     => \App\Http\Middleware\CheckMengajariBtq::class,
+             'tilawah' => \App\Http\Middleware\CheckMengajariTilawah::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

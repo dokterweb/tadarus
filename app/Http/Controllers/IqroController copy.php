@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Log;
 use Carbon\Carbon;
 use App\Models\Siswa;
-use App\Models\Ustadz;
 use App\Models\Kelompok;
 use App\Models\Jenisiqro;
 use App\Models\Iqrohistory;
@@ -102,40 +101,12 @@ class IqroController extends Controller
 
     public function create()
     {
-        $user = auth()->user();
-
-        // base query kelompok tilawah
-        $kelompoksQuery = Kelompok::select('id','nama_kelompok','jenis')
-            ->where('pelajaran', 'btq');  // hanya kelompok tilawah
-    
-        // ========== ROLE ADMIN ==========
-        if ($user->hasRole('admin')) {
-            // admin melihat seluruh kelompok → tidak ada filter jenis
-            // jadi tidak perlu tambah where
-    
-        // ========== ROLE USTADZ ==========
-        } elseif ($user->hasRole('ustadz')) {
-    
-            $ustadz = $user->ustadz;
-    
-            if ($ustadz) {
-    
-                $jenis = $ustadz->kelamin === 'laki-laki' ? 'putra' : 'putri';
-    
-                $kelompoksQuery->where('jenis', $jenis);
-            }
-    
-        // ========== ROLE LAIN (adminputra, adminputri) ==========
-        } else {
-            // role selain ustadz atau admin → tampilkan semua kelompok tilawah
-            // tanpa filter jenis
-        }
-    
         // $kelompoks = Kelompok::select('id','nama_kelompok')->orderBy('nama_kelompok')->get();
-        $kelompoks = $kelompoksQuery
+        $kelompoks = Kelompok::select('id','nama_kelompok')
+        ->where('pelajaran', 'btq')   // ← filter kelompok
         ->orderBy('nama_kelompok')
         ->get();
-        
+
         $jenisiqros = Jenisiqro::all();
 
         return view('iqros.create', compact('kelompoks','jenisiqros'));
@@ -151,7 +122,6 @@ class IqroController extends Controller
     public function store(Request $request)
     {
         // Validasi umum
-        // dd($request->all());
         $base = $request->validate([
             'tgl'               => 'required|date',
             'kelompok_id'       => 'required|integer|exists:kelompoks,id',
@@ -160,7 +130,6 @@ class IqroController extends Controller
             'keterangan'        => 'nullable|string',
         ]);
     
-        // dd($base); // Menampilkan data yang sudah tervalidasi
         // Jika BUKAN hadir → cukup simpan absensi
         if ($base['status'] !== 'hadir') {
             Absensi_siswa::create([
@@ -181,33 +150,17 @@ class IqroController extends Controller
             'hal_akhir'     => 'required|integer|min:1|gte:hal_awal',
         ]);
     
-        // dd($more); // Menampilkan data yang sudah tervalidasi iqro
-        
         try {
             DB::transaction(function () use ($base, $more, $request) {
-               // 1. Periksa apakah sudah ada absensi untuk ustadz di tanggal yang sama
-                $existingAbsensiUstadz = Absensi_ustadz::where('tgl_absen', $base['tgl'])
-                ->where('ustadz_id', auth()->id())
-                ->exists();
-                $ustadz = Ustadz::where('user_id', auth()->id())->first();
-                // Jika sudah ada absensi, batalkan insert untuk absensi, tapi lanjutkan insert untuk iqrohistory
-                if ($existingAbsensiUstadz) {
-                    Log::info('Absensi untuk ustadz pada tanggal ini sudah ada, lanjutkan menyimpan iqrohistory.');
-                } else {
-                    // Simpan absensi hadir untuk ustadz (jika belum ada)
-                    Absensi_ustadz::updateOrCreate(
-                        ['tgl_absen' => $base['tgl'], 'ustadz_id' => $ustadz->id],
-                        ['status' => 'hadir', 'keterangan' => 'Iqro input oleh ustadz']
-                    );
-                }
-
+    
+                // Simpan tadarus_history
                 $iqrohistory = Iqrohistory::create([
-                    'siswa_id'      => $base['siswa_id'],
-                    'ustadz_id'     => $ustadz->id, 
+                    'siswa_id'       => $base['siswa_id'],
+                    'ustadz_id'      => auth()->id(), // menggunakan Auth
                     'jenisiqro_id'  => $more['jenisiqro_id'],
                     'nilaibacaan'   => $more['nilaibacaan'],
-                    'hal_awal'      => $more['hal_awal'],
-                    'hal_akhir'     => $more['hal_akhir'],
+                    'hal_awal'       => $more['hal_awal'],
+                    'hal_akhir'      => $more['hal_akhir'],
                     'tgl_iqro'      => $base['tgl'],
                 ]);
                 
@@ -217,12 +170,18 @@ class IqroController extends Controller
                     ['status' => 'hadir', 'keterangan' => $base['keterangan'] ?? null]
                 );
                 
+                // Simpan absensi hadir untuk ustadz
+                $absensi_ustadz = Absensi_ustadz::updateOrCreate(
+                    ['tgl_absen' => $base['tgl'], 'ustadz_id' => auth()->id()],
+                    ['status' => 'hadir', 'keterangan' => 'Iqro input oleh ustadz']
+                );
+                
             });
     
             // return back()->with('success','Tadarus & absensi hadir tersimpan.');
             return redirect()
             ->route('iqros.show', $base['siswa_id'])
-            ->with('success','Iqra dan absensi hadir tersimpan.');
+            ->with('success','Iqra & absensi hadir tersimpan.');
         } catch (\Exception $e) {
             \Log::error('Error during transaction: ' . $e->getMessage());
             return back()->with('error','Gagal menyimpan: ' . $e->getMessage());
@@ -250,46 +209,13 @@ class IqroController extends Controller
         return response()->json($histories);
     }
 
-    public function edit($id)
+       public function edit($id)
     {
-        $user = auth()->user();
-
-        // base query kelompok tilawah
-        $kelompoksQuery = Kelompok::select('id','nama_kelompok','jenis')
-            ->where('pelajaran', 'btq');  // hanya kelompok tilawah
-    
-        // ========== ROLE ADMIN ==========
-        if ($user->hasRole('admin')) {
-            // admin melihat seluruh kelompok → tidak ada filter jenis
-            // jadi tidak perlu tambah where
-    
-        // ========== ROLE USTADZ ==========
-        } elseif ($user->hasRole('ustadz')) {
-    
-            $ustadz = $user->ustadz;
-    
-            if ($ustadz) {
-    
-                $jenis = $ustadz->kelamin === 'laki-laki' ? 'putra' : 'putri';
-    
-                $kelompoksQuery->where('jenis', $jenis);
-            }
-    
-        // ========== ROLE LAIN (adminputra, adminputri) ==========
-        } else {
-            // role selain ustadz atau admin → tampilkan semua kelompok tilawah
-            // tanpa filter jenis
-        }
-    
-        // $kelompoks = Kelompok::select('id','nama_kelompok')->orderBy('nama_kelompok')->get();
-        $kelompoks = $kelompoksQuery
-        ->orderBy('nama_kelompok')
-        ->get();
-
+        // Ambil data iqrohistory berdasarkan ID
         $iqro = Iqrohistory::findOrFail($id);
 
         // Ambil data kelompok dan jenis iqro untuk dropdown
-        // $kelompoks = Kelompok::select('id', 'nama_kelompok')->orderBy('nama_kelompok')->get();
+        $kelompoks = Kelompok::select('id', 'nama_kelompok')->orderBy('nama_kelompok')->get();
         $jenisiqros = Jenisiqro::all();
         $absensi = Absensi_siswa::where('siswa_id', $iqro->siswa_id)
         ->whereDate('tgl_absen', $iqro->tgl_iqro)
@@ -321,7 +247,6 @@ class IqroController extends Controller
         try {
             DB::transaction(function () use ($base, $more, $request, $id) {
 
-                $ustadz = Ustadz::where('user_id', auth()->id())->first();
                 // Cek apakah status absen adalah "hadir"
                 if ($base['status'] === 'hadir') {
 
@@ -330,9 +255,9 @@ class IqroController extends Controller
 
                     $iqro->update([
                         'siswa_id'      => $base['siswa_id'],
-                        'ustadz_id'     => $ustadz->id,
+                        'ustadz_id'     => auth()->id(),
                         'jenisiqro_id'  => $more['jenisiqro_id'],
-                        'nilaibacaan'   => $more['nilaibacaan'],
+                        'nilaibacaan'  => $more['nilaibacaan'],
                         'hal_awal'      => $more['hal_awal'],
                         'hal_akhir'     => $more['hal_akhir'],
                         'tgl_iqro'      => $base['tgl'],
@@ -349,13 +274,14 @@ class IqroController extends Controller
                     ['status' => $base['status'], 'keterangan' => $base['keterangan'] ?? null]
                 );
 
+                // Simpan absensi ustadz
+                Absensi_ustadz::updateOrCreate(
+                    ['tgl_absen' => $base['tgl'], 'ustadz_id' => auth()->id()],
+                    ['status' => $base['status'], 'keterangan' => 'Iqro input oleh ustadz']
+                );
             });
 
-            return redirect()
-            ->route('iqros.show', $base['siswa_id'])
-            ->with('success','Iqra dan absensi hadir tersimpan.');
-
-            // return back()->with('success', 'Data berhasil diperbarui.');
+            return back()->with('success', 'Data berhasil diperbarui.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal memperbarui data: ' . $e->getMessage());
         }
@@ -387,20 +313,4 @@ class IqroController extends Controller
         return view('iqros.show', compact('siswa', 'iqroHistories','absensiCounts'));
     }
 
-    public function destroy($id)
-    {
-        try {
-            $iqro = Iqrohistory::findOrFail($id);
-            $iqro->delete();
-
-            // Jika absensi terkait dengan iqro dihapus, hapus juga absensinya
-            AbsensiSiswa::where('siswa_id', $iqro->siswa_id)
-                ->where('tgl_absen', $iqro->tgl_iqro)
-                ->delete();
-
-            return response()->json(['status' => 'success', 'message' => 'Data berhasil dihapus']);
-        } catch (\Exception $e) {
-            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
-        }
-    }
 }

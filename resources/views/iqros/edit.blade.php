@@ -15,7 +15,7 @@
                 <div class="row">
                     <div class="col-md-4">
                         <label >Tanggal</label>    
-                        <input type="date" name="tgl" class="form-control" value="{{ $iqro->tgl_iqro }}" required>
+                        <input type="date" name="tgl" id="tgl" class="form-control" value="{{ $iqro->tgl_iqro }}" required>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
@@ -121,6 +121,32 @@
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
 <script>
+
+    $(document).ready(function () {
+        $('#tgl').on('change', function () {
+            let tanggal = $(this).val();
+            if (!tanggal) return;
+
+            $.ajax({
+                url: "{{ url('/cek-hari-libur') }}/" + tanggal,
+                method: "GET",
+                success: function (res) {
+                    if (res.status === 'libur') {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Tanggal Libur!',
+                            text: `Tanggal ini adalah: ${res.nama_libur} (${res.tipe})`,
+                            confirmButtonText: 'OK'
+                        }).then(() => {
+                            // kosongkan tanggal supaya form nggak bisa di-submit
+                            $('#tgl').val('');
+                        });
+                    }
+                }
+            });
+        });
+    });
+
     $(function () {
         function toggleIqroSection() {
             const status = $('#status').val();

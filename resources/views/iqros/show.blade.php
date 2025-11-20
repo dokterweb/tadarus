@@ -66,17 +66,28 @@
                                 <th>Dari Ayat</th>
                                 <th>Sampai Ayat</th>
                                 <th>Keterangan</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($iqroHistories as $history)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($history->tgl_tadarusnya)->format('d-m-Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($history->tgl_iqro)->format('d-m-Y') }}</td>
                                     <td>{{ $history->jenisiqro->nama_iqro ?? '-' }}</td>
                                     <td>{{ $history->hal_awal }}</td>
                                     <td>{{ $history->hal_akhir }}</td>
                                     <td>{{ $history->nilaibacaan ?? '-' }}</td>
+                                    <td class="d-flex align-items-center" style="gap: 5px;">
+                                        <a href="{{route('iqros.edit',$history->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                            <form method="POST" action="{{ route('iqros.destroy', $history->id) }}" style="display: inline;" id="delete-form-{{ $history->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $history->id }})">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -87,50 +98,53 @@
         </div>
     </div>
 
-     <!-- SweetAlert2 Script -->
-     @if (session('success'))
-     <script>
-         Swal.fire({
-             icon: 'success',
-             title: 'Berhasil',
-             text: "{{ session('success') }}",
-             position: 'top-end',
-             showConfirmButton: false,
-             timer: 1500
-         });
-     </script>
-    @elseif (session('error'))
-        <script>
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: "{{ session('error') }}",
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 1500
-            });
-        </script>
-    @endif
-    <script>
-        $(document).ready(function () {
-          $('#paketTable').DataTable();
-        });
-        function deleteConfirmation(id) {
-            Swal.fire({
-                title: 'Apakah Anda yakin?',
-                text: "Data ini akan dihapus dan tidak dapat dipulihkan!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Hapus!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Jika tombol "Ya, Hapus!" ditekan, kirim form untuk menghapus data
-                    document.getElementById('delete-form-' + id).submit();
-                }
-            });
-        }
-    </script>
+     
+@endsection
+@section('scripts')
+<!-- SweetAlert2 Script -->
+@if (session('success'))
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: "{{ session('success') }}",
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 1500
+    });
+</script>
+@elseif (session('error'))
+   <script>
+       Swal.fire({
+           icon: 'error',
+           title: 'Oops...',
+           text: "{{ session('error') }}",
+           position: 'top-end',
+           showConfirmButton: false,
+           timer: 1500
+       });
+   </script>
+@endif
+<script>
+   $(document).ready(function () {
+     $('#paketTable').DataTable();
+   });
+   function deleteConfirmation(id) {
+       Swal.fire({
+           title: 'Apakah Anda yakin?',
+           text: "Data ini akan dihapus dan tidak dapat dipulihkan!",
+           icon: 'warning',
+           showCancelButton: true,
+           confirmButtonColor: '#3085d6',
+           cancelButtonColor: '#d33',
+           confirmButtonText: 'Ya, Hapus!',
+           cancelButtonText: 'Batal'
+       }).then((result) => {
+           if (result.isConfirmed) {
+               // Jika tombol "Ya, Hapus!" ditekan, kirim form untuk menghapus data
+               document.getElementById('delete-form-' + id).submit();
+           }
+       });
+   }
+</script>
 @endsection

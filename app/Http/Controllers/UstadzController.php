@@ -26,10 +26,12 @@ class UstadzController extends Controller
     {
          // 1. Validasi input
          $validated = $request->validate([
-            'name'      => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email',
-            'password'  => 'required|string|min:6', 
-            'kelompok_id'  => 'required','integer',
+            'name'          => 'required|string|max:255',
+            'kelompok_id'   => 'required','integer',
+            'kelamin'       => 'required|in:laki-laki,perempuan',
+            'mengajari'     => 'required|in:tilawah,btq',
+            'email'         => 'required|email|unique:users,email',
+            'password'      => 'required|string|min:6', 
         ]);
 
         try {
@@ -49,7 +51,9 @@ class UstadzController extends Controller
                 // 4. Simpan ke tabel Ustadz
                 Ustadz::create([
                     'user_id'       => $user->id,
-                    'kelompok_id'      => $validated['kelompok_id'],
+                    'kelompok_id'   => $validated['kelompok_id'],
+                    'kelamin'       => $validated['kelamin'],
+                    'mengajari'     => $validated['mengajari'],
                 ]);
             });
     
@@ -81,6 +85,8 @@ class UstadzController extends Controller
             'email'        => 'required|email|unique:users,email,' . $ustadz->user_id,
             'password'     => 'nullable|string|min:6', // optional, hanya diupdate kalau diisi
             'kelompok_id'  => 'required|integer',
+            'kelamin'       => 'required|in:laki-laki,perempuan',
+            'mengajari'     => 'required|in:tilawah,btq',
         ]);
     
         try {
@@ -106,7 +112,9 @@ class UstadzController extends Controller
     
                 // 5️⃣ Update tabel Ustadz
                 $ustadz->update([
-                    'kelompok_id' => $validated['kelompok_id'],
+                    'kelompok_id'   => $validated['kelompok_id'],
+                    'kelamin'       => $validated['kelamin'],
+                    'mengajari'     => $validated['mengajari'],
                 ]);
             });
     

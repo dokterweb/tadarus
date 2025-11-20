@@ -77,6 +77,16 @@
                                     <td>{{ $history->sampaiayat }}</td>
                                     <td>{{ \Carbon\Carbon::parse($history->tgl_tadarusnya)->format('d-m-Y') }}</td>
                                     <td>{{ $history->keterangan ?? '-' }}</td>
+                                    <td>
+                                        <a href="{{route('tadaruses.edit',$history->id)}}" class="btn btn-sm btn-info"><i class="far fa-edit"></i></a>
+                                            <form method="POST" action="{{ route('tadaruses.destroy', $history->id) }}" style="display: inline;" id="delete-form-{{ $history->id }}">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteConfirmation({{ $history->id }})">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>

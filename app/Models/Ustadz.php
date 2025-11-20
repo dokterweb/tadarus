@@ -10,7 +10,7 @@ class Ustadz extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id', 'kelompok_id', 'nama_ustadz','mengajari','kelamin'];
+    protected $fillable = ['user_id', 'kelompok_id','mengajari','kelamin'];
 
     public function user()
     {

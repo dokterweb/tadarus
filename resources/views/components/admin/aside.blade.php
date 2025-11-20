@@ -59,6 +59,14 @@
             </a>
           </li>
           <li class="nav-item">
+            <a href="{{route('absensiswas.index')}}" class="nav-link {{request()->routeIs('absensiswas.index')?'active':''}}">
+              <i class="nav-icon fas fa-tachometer-alt"></i>
+              <p>Absensi Siswa</p>
+            </a>
+          </li>
+        
+          @role('admin')
+          <li class="nav-item">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tachometer-alt"></i>
               <p>Master<i class="right fas fa-angle-left"></i></p>
@@ -89,7 +97,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{route('hariliburs')}}" class="nav-link {{request()->routeIs('kelompoks')?'active':''}}">
+                <a href="{{route('kelompoks')}}" class="nav-link {{request()->routeIs('kelompoks')?'active':''}}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Kelompok</p>
                 </a>
@@ -108,6 +116,7 @@
               </li>
             </ul>
           </li> 
+          @endrole
           <li class="nav-item">
             <a href="{{route('password.change')}}" class="nav-link {{request()->routeIs('password.change')?'active':''}}">
               <i class="nav-icon fas fa-tachometer-alt"></i>

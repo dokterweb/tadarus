@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Siswa;
+use App\Models\Ustadz;
 use App\Models\Kelompok;
+use App\Models\Harilibur;
 use Illuminate\Http\Request;
 use App\Models\Absensi_siswa;
 use App\Models\Absensi_ustadz;
@@ -94,38 +96,38 @@ class TadarusController extends Controller
     {
         $user = auth()->user();
 
-    // base query kelompok tilawah
-    $kelompoksQuery = Kelompok::select('id','nama_kelompok','jenis')
-        ->where('pelajaran', 'tilawah');  // hanya kelompok tilawah
+        // base query kelompok tilawah
+        $kelompoksQuery = Kelompok::select('id','nama_kelompok','jenis')
+            ->where('pelajaran', 'tilawah');  // hanya kelompok tilawah
 
-    // ========== ROLE ADMIN ==========
-    if ($user->hasRole('admin')) {
-        // admin melihat seluruh kelompok → tidak ada filter jenis
-        // jadi tidak perlu tambah where
+        // ========== ROLE ADMIN ==========
+        if ($user->hasRole('admin')) {
+            // admin melihat seluruh kelompok → tidak ada filter jenis
+            // jadi tidak perlu tambah where
 
-    // ========== ROLE USTADZ ==========
-    } elseif ($user->hasRole('ustadz')) {
+        // ========== ROLE USTADZ ==========
+        } elseif ($user->hasRole('ustadz')) {
 
-        $ustadz = $user->ustadz;
+            $ustadz = $user->ustadz;
 
-        if ($ustadz) {
+            if ($ustadz) {
 
-            // ustadz laki-laki → kelompok putra
-            // ustadz perempuan → kelompok putri
-            $jenis = $ustadz->kelamin === 'laki-laki' ? 'putra' : 'putri';
+                // ustadz laki-laki → kelompok putra
+                // ustadz perempuan → kelompok putri
+                $jenis = $ustadz->kelamin === 'laki-laki' ? 'putra' : 'putri';
 
-            $kelompoksQuery->where('jenis', $jenis);
+                $kelompoksQuery->where('jenis', $jenis);
+            }
+
+        // ========== ROLE LAIN (adminputra, adminputri) ==========
+        } else {
+            // role selain ustadz atau admin → tampilkan semua kelompok tilawah
+            // tanpa filter jenis
         }
 
-    // ========== ROLE LAIN (adminputra, adminputri) ==========
-    } else {
-        // role selain ustadz atau admin → tampilkan semua kelompok tilawah
-        // tanpa filter jenis
-    }
-
-    $kelompoks = $kelompoksQuery
-        ->orderBy('nama_kelompok')
-        ->get();
+        $kelompoks = $kelompoksQuery
+            ->orderBy('nama_kelompok')
+            ->get();
 
         // dropdown surat (nama & nomor) — cukup yang dibutuhkan
         $surat = DB::table('madina')
@@ -233,7 +235,17 @@ class TadarusController extends Controller
 
         try {
             DB::transaction(function () use ($base, $more, $request) {
+                
+                $existingAbsensiUstadz = Absensi_ustadz::where('tgl_absen', $base['tgl'])
+                            ->where('ustadz_id', auth()->id()) // pastikan absensi sesuai dengan ustadz yang login
+                            ->exists();
 
+                // Jika sudah ada absensi, batalkan dan kirimkan pesan error
+                if ($existingAbsensiUstadz) {
+                throw new \Exception('Ustadz sudah melakukan absensi pada tanggal ini.');
+                }
+
+                $ustadz = Ustadz::where('user_id', auth()->id())->first();
                 // ambil surat
                 $surat = DB::table('madina')
                     ->where('sura_no',$more['surat_no'])
@@ -242,7 +254,7 @@ class TadarusController extends Controller
                 // simpan tadarus_history
                 TadarusHistory::create([
                     'siswa_id'       => $base['siswa_id'],
-                    'ustadz_id'      => auth()->id(), // kalau pakai Auth
+                    'ustadz_id'      => $ustadz->id, // kalau pakai Auth
                     'surat_id'       => $surat->id,
                     'surat_no'       => $more['surat_no'],
                     'dariayat'       => $more['dariayat'],
@@ -259,12 +271,15 @@ class TadarusController extends Controller
 
                  // Catat absensi hadir untuk ustadz
                 Absensi_ustadz::updateOrCreate(
-                    ['tgl_absen' => $base['tgl'], 'ustadz_id' => auth()->id()],
+                    ['tgl_absen' => $base['tgl'], 'ustadz_id' => $ustadz->id],
                     ['status' => 'hadir', 'keterangan' => 'Tadarus input oleh ustadz']
                 );
             });
 
-            return back()->with('success','Tadarus & absensi hadir tersimpan.');
+            // return back()->with('success','Tadarus & absensi hadir tersimpan.');
+            return redirect()
+            ->route('tadarus.show', $base['siswa_id'])
+            ->with('success','Tadarus & absensi hadir tersimpan.');
         } catch (\Exception $e) {
             return back()->with('error','Gagal menyimpan: '.$e->getMessage());
         }
@@ -324,10 +339,45 @@ class TadarusController extends Controller
   
     public function edit($id)
     {
+        $user = auth()->user();
+
+        // base query kelompok tilawah
+        $kelompoksQuery = Kelompok::select('id','nama_kelompok','jenis')
+            ->where('pelajaran', 'tilawah');  // hanya kelompok tilawah
+
+        // ========== ROLE ADMIN ==========
+        if ($user->hasRole('admin')) {
+            // admin melihat seluruh kelompok → tidak ada filter jenis
+            // jadi tidak perlu tambah where
+
+        // ========== ROLE USTADZ ==========
+        } elseif ($user->hasRole('ustadz')) {
+
+            $ustadz = $user->ustadz;
+
+            if ($ustadz) {
+
+                // ustadz laki-laki → kelompok putra
+                // ustadz perempuan → kelompok putri
+                $jenis = $ustadz->kelamin === 'laki-laki' ? 'putra' : 'putri';
+
+                $kelompoksQuery->where('jenis', $jenis);
+            }
+
+        // ========== ROLE LAIN (adminputra, adminputri) ==========
+        } else {
+            // role selain ustadz atau admin → tampilkan semua kelompok tilawah
+            // tanpa filter jenis
+        }
+
+        $kelompoks = $kelompoksQuery
+            ->orderBy('nama_kelompok')
+            ->get();
+
         // Ambil data tadarus berdasarkan ID
         $tadarus = TadarusHistory::findOrFail($id);
         // dd($tadarus);
-        $kelompoks = Kelompok::all();  // Ambil semua kelompok untuk dropdown
+        // $kelompoks = Kelompok::all();  // Ambil semua kelompok untuk dropdown
         
         $surat = DB::table('madina')
         ->select('sura_no','sura_name', DB::raw('MIN(id) as id'))

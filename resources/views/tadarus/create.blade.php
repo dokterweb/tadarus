@@ -57,7 +57,7 @@
                 <div class="row">
                     {{-- SECTION TADARUS — tampil hanya bila status=hadir --}}
                     <div id="sectionTadarus" class="col-md-12 mt-4" style="display:none;">
-                        <div class="border rounded p-3">
+                        <div class="border border-primary rounded p-3">
                             <h6 class="mb-3">Detail Tadarus</h6>
 
                             <div class="row g-3">
@@ -157,28 +157,31 @@
 <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
 
 <script>
-    $(document).ready(function () {
-        $('#tgl').on('change', function () {
-            let tanggal = $(this).val();
+   $(document).ready(function () {
+    $('#tgl').on('change', function () {
+        let tanggal = $(this).val();
+        if (!tanggal) return;
 
-            if (!tanggal) return;
-
-            $.ajax({
-                url: "{{ url('/cek-hari-libur') }}/" + tanggal,
-                method: "GET",
-                success: function (res) {
-                    if (res.status === 'libur') {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Tanggal Libur!',
-                            text: `Tanggal ini adalah: ${res.nama_libur} (${res.tipe})`,
-                            confirmButtonText: 'OK'
-                        });
-                    }
+        $.ajax({
+            url: "{{ url('/cek-hari-libur') }}/" + tanggal,
+            method: "GET",
+            success: function (res) {
+                if (res.status === 'libur') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tanggal Libur!',
+                        text: `Tanggal ini adalah: ${res.nama_libur} (${res.tipe})`,
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // kosongkan tanggal supaya form nggak bisa di-submit
+                        $('#tgl').val('');
+                    });
                 }
-            });
+            }
         });
     });
+});
+
     
     document.addEventListener('DOMContentLoaded', () => {
     
